@@ -1,4 +1,4 @@
-name: CAPSTONE
+name: tripwise
 
 on:
     push:
@@ -6,38 +6,41 @@ on:
             - main
 
 jobs:
-    test: ##menjalankan semua unit test
+    test:
         runs-on: ubuntu-latest
         steps:
-            - name: checkout the code
+            - name: Checkout the code
               uses: actions/checkout@v2
-            - name: setup go
+            - name: Setup Go
               uses: actions/setup-go@v3
               with:
                 go-version: '1.21'
-            - name: run test
+            - name: Run tests
               run: |
                 go test -v ./...
 
-    build-and-push-docker: ##Membuat image Docker berdasarkan kode dan tag dengan nama
+    build-and-push-docker:
         runs-on: ubuntu-latest
         needs: test
         steps:
-            - name: checkout the code
+            - name: Checkout the code
               uses: actions/checkout@v2
-            - name: create env file
+            - name: Create .env file
               run: |
-                echo "${{secrets.ENV}}" >> .env
-            - name: build docker
-              run: docker build -t jasminearta/tripwise:1.0.0 .
-            - name: docker hub login
+                echo "${{ secrets.ENV }}" >> .env
+            - name: Build Docker image
+              run: |
+                docker build -t jasminearta/tripwise:1.0.0 .
+            - name: Docker Hub login
               uses: docker/login-action@v1
-              with:  ## Login ke Docker Hub menggunakan kredensial rahasia
-                username: ${{secrets.DOCKER_USER}}
-                password: ${{secrets.DOCKER_TOKEN}}
-            - name: push image
-              run: docker push jasminearta/tripwise:1.0.0
-    deploy: ## Menggunakan SSH untuk menyebarkan ke EC2.
+              with: 
+                username: ${{ secrets.DOCKER_USER }}
+                password: ${{ secrets.DOCKER_TOKEN }}
+            - name: Push Docker image
+              run: |
+                docker push jasminearta/tripwise:1.0.0
+
+    deploy:
       needs: build-and-push-docker
       runs-on: ubuntu-latest
       env:
@@ -45,8 +48,8 @@ jobs:
         EC2_HOST: ${{ secrets.EC2_HOST }}
         EC2_USER: ${{ secrets.EC2_USER }}
 
-      steps: ##Menarik (pull) image Docker terbaru dari Docker Hub dan menjalankan container baru pada server.
-        - name: Check out the code
+      steps:
+        - name: Checkout the code
           uses: actions/checkout@v2
 
         - name: Create PEM file from secret
@@ -57,16 +60,16 @@ jobs:
         - name: Deploy to EC2
           run: |
             ssh -i ec2-key.pem -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST << EOF
-              # Stop the current container if running
+              # Stop and remove the current container if running
               sudo docker ps -q --filter "name=my-container" | grep -q . && sudo docker stop my-container || true
               sudo docker rm my-container || true
 
-              # Pull the latest image from ECR
+              # Pull the latest image from Docker Hub
               sudo docker pull $IMAGE_URI
 
-              # Run the new container
+              # Run the new container (adjust ports as needed for your Gin app)
               sudo docker run -d --name my-container -p 8000:8000 $IMAGE_URI
-            EOF 
+            EOF
 
         - name: Clean up PEM file
           run: rm -f ec2-key.pem
