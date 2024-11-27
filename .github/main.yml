@@ -1,4 +1,4 @@
-name: ci/cd_miniproject
+name: ci/cd_capstone
 
 on:
     push:
