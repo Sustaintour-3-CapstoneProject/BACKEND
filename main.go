@@ -2,7 +2,6 @@ package main
 
 import (
 	"backend/config"
-	"backend/models"
 	"backend/routes"
 
 	"github.com/labstack/echo/v4"
@@ -13,9 +12,6 @@ func main() {
 
 	// Initialize Database
 	config.InitDB()
-
-	// Run Migrations
-	config.DB.AutoMigrate(&models.User{})
 
 	// Register Routes
 	routes.RegisterRoutes(e)
