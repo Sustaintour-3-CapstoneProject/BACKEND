@@ -87,8 +87,11 @@ func Login(c echo.Context) error {
 
 	// Response sukses
 	return c.JSON(http.StatusOK, map[string]string{
-		"message": "login successful",
-		"user":    userInput.Username,
-		"token":   token,
+		"message":      "login successful",
+		"user":         userInput.Username,
+		"first_name":   userInput.FirstName,
+		"last_name":    userInput.LastName,
+		"phone_number": userInput.PhoneNumber,
+		"token":        token,
 	})
 }
