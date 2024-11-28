@@ -11,6 +11,7 @@ import (
 	"backend/models"
 )
 
+// Fungsi Register
 func Register(c echo.Context) error {
 	user := new(models.User)
 	if err := c.Bind(user); err != nil {
@@ -40,6 +41,22 @@ func Register(c echo.Context) error {
 	})
 }
 
+// Fungsi Logout
+func Logout(c echo.Context) error {
+	cookie := &http.Cookie{
+		Name:     "token",
+		Value:    "",
+		Path:     "/",
+		HttpOnly: true,
+		MaxAge:   -1,
+	}
+	c.SetCookie(cookie)
+	return c.JSON(http.StatusOK, map[string]interface{}{
+		"message": "Berhasil Logout",
+	})
+}
+
+// Fungsi Login
 func Login(c echo.Context) error {
 	userInput := new(models.User)
 	if err := c.Bind(userInput); err != nil {
@@ -71,6 +88,7 @@ func Login(c echo.Context) error {
 	// Response sukses
 	return c.JSON(http.StatusOK, map[string]string{
 		"message": "login successful",
+		"user":    userInput.Username,
 		"token":   token,
 	})
 }
