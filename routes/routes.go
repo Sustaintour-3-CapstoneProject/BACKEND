@@ -9,6 +9,6 @@ import (
 func RegisterRoutes(e *echo.Echo) {
 	e.POST("/register", controllers.Register)
 	e.POST("/login", controllers.Login)
-	e.POST("/api/logout", controllers.Logout)
+	e.POST("/logout", controllers.Logout)
 
 }

@@ -28,6 +28,7 @@ func main() {
 	// Register Routes
 	routes.RegisterRoutes(e)
 
+	
 	// Start Server
 	e.Logger.Fatal(e.Start(":8000"))
 }
