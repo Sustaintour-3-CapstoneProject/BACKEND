@@ -84,16 +84,4 @@ func Login(c echo.Context) error {
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"message": "could not generate token"})
 	}
-
-	// Response sukses
-	return c.JSON(http.StatusOK, map[string]interface{}{
-		"message": "login successful",
-		"user": map[string]string{
-			"username":     userInput.Username,
-			"first_name":   user.FirstName,
-			"last_name":    user.LastName,
-			"phone_number": user.PhoneNumber,
-		},
-		"token": token,
-	})
 }
