@@ -26,7 +26,7 @@ func main() {
 	}))
 
 	// Register Routes
-	routes.RegisterRoutes(e)
+	routes.InitRoutes(e)
 
 	
 	// Start Server
