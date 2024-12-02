@@ -9,7 +9,10 @@ import (
 )
 
 func FilterDestinations(c echo.Context) error {
+	// Mengambil query parameter 'city' untuk filter berdasarkan kota
 	city := c.QueryParam("city")
+
+	// Mengambil query parameter 'category' untuk filter berdasarkan kategori
 	categories := c.QueryParams()["category"] // Mendapatkan daftar kategori yang dipilih pengguna, bisa lebih dari satu
 
 	var destinations []models.Destination
@@ -31,6 +34,7 @@ func FilterDestinations(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Failed to fetch destinations"})
 	}
 
+	// Kembalikan hasil dalam bentuk JSON
 	return c.JSON(http.StatusOK, map[string]interface{}{
 		"message":      "Destinations filtered successfully",
 		"destinations": destinations,

@@ -20,8 +20,11 @@ func InitRoutes(e *echo.Echo) {
 	// Route untuk destinasi
 	e.POST("/destination", controllers.CreateDestination)
 	e.GET("/destination", controllers.GetAllDestinations)
-	e.PUT("/destinations/:id", controllers.UpdateDestination) // Endpoint untuk mengubah destinasi
-	e.DELETE("/destinations/:id", controllers.DeleteDestination)
+	e.PUT("/destination/:id", controllers.UpdateDestination) // Endpoint untuk mengubah destinasi
+	e.DELETE("/destination/:id", controllers.DeleteDestination)
+
+	// route untuk personalized recommendation
+	e.GET("/destination", controllers.FilterDestinations)
 
 	// route untuk menambahkan kota
 	e.POST("/city", controllers.CreateCity)
