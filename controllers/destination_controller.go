@@ -40,6 +40,7 @@ func CreateDestination(c echo.Context) error {
 	destination := new(models.Destination)
 	destination.Name = jsonBody.Name
 	destination.City = jsonBody.City
+	destination.Position = jsonBody.Position
 	destination.Address = jsonBody.Address
 	destination.OperationalHours = jsonBody.OperationalHours
 	destination.TicketPrice = jsonBody.TicketPrice
