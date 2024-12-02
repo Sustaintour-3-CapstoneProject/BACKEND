@@ -4,6 +4,7 @@ import (
 	"backend/config"
 	"backend/models"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -40,6 +41,7 @@ func CreateDestination(c echo.Context) error {
 
 	// Cari CityID berdasarkan nama kota
 	var city models.City
+	fmt.Println(city)
 	if err := config.DB.Where("name = ?", jsonBody.City).First(&city).Error; err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"message": "City not found"})
 	}
