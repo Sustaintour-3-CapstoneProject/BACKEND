@@ -43,3 +43,17 @@ func CreateCity(c echo.Context) error {
 		"city":    city,
 	})
 }
+
+func GetCity(c echo.Context) error {
+	// Mendapatkan semua data kota dari database
+	var cities []models.City
+	if err := config.DB.Find(&cities).Error; err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Failed to fetch cities"})
+	}
+
+	// Mengembalikan data kota dalam format JSON
+	return c.JSON(http.StatusOK, map[string]interface{}{
+		"message": "City fetched successfully",
+		"cities":  cities,
+	})
+}

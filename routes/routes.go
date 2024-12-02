@@ -25,5 +25,6 @@ func InitRoutes(e *echo.Echo) {
 
 	// route untuk menambahkan kota
 	e.POST("/city", controllers.CreateCity)
+	e.GET("/city", controllers.GetCity)
 
 }
