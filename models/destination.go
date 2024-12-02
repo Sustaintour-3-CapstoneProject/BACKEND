@@ -9,7 +9,8 @@ import (
 type Destination struct {
 	ID               uint           `gorm:"primaryKey" json:"id"`
 	Name             string         `json:"name"`
-	City             string         `json:"city"`
+	CityID           uint           `json:"city_id"`
+	City             City           `gorm:"foreignKey:CityID" json:"city"` // <-- Perbaiki di sini
 	Position         float64        `json:"position"`
 	Address          string         `json:"address"`
 	OperationalHours string         `json:"operational_hours"`

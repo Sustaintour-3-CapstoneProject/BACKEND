@@ -37,23 +37,28 @@ func CreateDestination(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]string{"message": "Invalid JSON body"})
 	}
 
+	// Cari CityID berdasarkan nama kota
+	var city models.City
+	if err := config.DB.Where("name = ?", jsonBody.City).First(&city).Error; err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"message": "City not found"})
+	}
+
 	destination := new(models.Destination)
 	destination.Name = jsonBody.Name
-	destination.City = jsonBody.City
+	destination.CityID = city.ID // Menggunakan CityID
 	destination.Position = jsonBody.Position
 	destination.Address = jsonBody.Address
 	destination.OperationalHours = jsonBody.OperationalHours
 	destination.TicketPrice = jsonBody.TicketPrice
 	destination.Category = jsonBody.Category
 	destination.Facilities = jsonBody.Facilities
-	// if err := c.Bind(destination); err != nil {
-	// 	return c.JSON(http.StatusBadRequest, map[string]string{"message": "Invalid input"})
-	// }
 
+	// Menyimpan destination ke database
 	if err := config.DB.Create(destination).Error; err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Failed to create destination"})
 	}
 
+	// Menambahkan gambar
 	for i := 0; i < len(jsonBody.Image); i++ {
 		image := new(models.Image)
 		image.DestinationID = destination.ID
@@ -63,7 +68,7 @@ func CreateDestination(c echo.Context) error {
 		}
 	}
 
-	//video
+	// Menambahkan video
 	for i := 0; i < len(jsonBody.Video); i++ {
 		video := new(models.VideoContent)
 		video.DestinationID = destination.ID
@@ -98,9 +103,15 @@ func UpdateDestination(c echo.Context) error {
 		return c.JSON(http.StatusNotFound, map[string]string{"message": "Destinasi tidak ditemukan"})
 	}
 
+	// Cari CityID berdasarkan nama kota
+	var city models.City
+	if err := config.DB.Where("name = ?", jsonBody.City).First(&city).Error; err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"message": "City not found"})
+	}
+
 	// Perbarui data destinasi
 	destination.Name = jsonBody.Name
-	destination.City = jsonBody.City
+	destination.CityID = city.ID // Gunakan CityID yang benar
 	destination.Address = jsonBody.Address
 	destination.OperationalHours = jsonBody.OperationalHours
 	destination.TicketPrice = jsonBody.TicketPrice

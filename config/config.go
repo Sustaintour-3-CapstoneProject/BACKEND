@@ -42,6 +42,7 @@ func InitDB() {
 		&models.Destination{},
 		&models.VideoContent{},
 		&models.Image{},
+		&models.City{},
 	)
 
 }
