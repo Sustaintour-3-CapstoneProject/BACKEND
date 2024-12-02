@@ -36,8 +36,7 @@ func InitRoutes(e *echo.Echo) {
 	e.POST("/api/v1/register", controllers.RegisterHandler)
 	e.POST("/api/v1/login", controllers.LoginHandler)
 
-	e.GET("/api/v1/destination", controllers.GetAllDestinations)
+	// Route untuk destinasi
 	e.POST("/api/v1/destination", controllers.CreateDestination)
-
-
+	e.GET("/api/v1/destination", controllers.GetAllDestinations)
 }

@@ -40,7 +40,8 @@ func InitDB() {
 	DB.AutoMigrate(
 		&models.User{},
 		&models.Destination{},
+		&models.VideoContent{},
 		&models.Image{},
 	)
-	
+
 }
