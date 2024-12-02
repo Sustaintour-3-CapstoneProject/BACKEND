@@ -39,4 +39,6 @@ func InitRoutes(e *echo.Echo) {
 	// Route untuk destinasi
 	e.POST("/api/v1/destination", controllers.CreateDestination)
 	e.GET("/api/v1/destination", controllers.GetAllDestinations)
+	e.PUT("/destinations/:id", controllers.UpdateDestination) // Endpoint untuk mengubah destinasi
+	e.DELETE("/destinations/:id", controllers.DeleteDestination)
 }
