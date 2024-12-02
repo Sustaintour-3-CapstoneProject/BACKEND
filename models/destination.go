@@ -19,8 +19,8 @@ type Destination struct {
 	Description      string         `json:"description"`
 	Facilities       string         `json:"facilities"`
 	CreatedAt        time.Time      `json:"created_at"`
-	Images           []Image        `json:"images"`
-	VideoContents    []VideoContent `json:"video_contents"` // Relasi ke video
+	Images           []Image        `json:"images" gorm:"foreignKey:DestinationID"`
+	VideoContents    []VideoContent `json:"video_contents" gorm:"foreignKey:DestinationID"`
 }
 
 func (b *Destination) AfterCreate(tx *gorm.DB) (err error) {

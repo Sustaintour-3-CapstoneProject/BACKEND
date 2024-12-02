@@ -31,8 +31,9 @@ type VideoInput struct {
 }
 
 func CreateDestination(c echo.Context) error {
+	// Decode JSON body
 	jsonBody := new(Input)
-	if err := json.NewDecoder(c.Request().Body).Decode(&jsonBody); err != nil {
+	if err := json.NewDecoder(c.Request().Body).Decode(jsonBody); err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"message": "Invalid JSON body"})
 	}
 
@@ -54,6 +55,7 @@ func CreateDestination(c echo.Context) error {
 		Facilities:       jsonBody.Facilities,
 	}
 
+	// Simpan destinasi ke database
 	if err := config.DB.Create(&destination).Error; err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Failed to create destination"})
 	}
@@ -82,6 +84,12 @@ func CreateDestination(c echo.Context) error {
 		}
 	}
 
+	// Muat ulang destinasi dengan properti City
+	if err := config.DB.Preload("City").Preload("Images").Preload("VideoContents").First(&destination, destination.ID).Error; err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Failed to fetch destination with related data"})
+	}
+
+	// Kembalikan respons dengan properti City yang lengkap
 	return c.JSON(http.StatusOK, destination)
 }
 
