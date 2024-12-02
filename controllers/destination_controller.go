@@ -19,6 +19,7 @@ type Input struct {
 	OperationalHours string       `json:"operational_hours"`
 	TicketPrice      float64      `json:"ticket_price"`
 	Category         string       `json:"category"`
+	Description      string       `json:"description`
 	Facilities       string       `json:"facilities"`
 	Image            []string     `json:"image"`
 	Video            []VideoInput `json:"video"`
@@ -54,6 +55,7 @@ func CreateDestination(c echo.Context) error {
 		TicketPrice:      jsonBody.TicketPrice,
 		Category:         jsonBody.Category,
 		Facilities:       jsonBody.Facilities,
+		Description:      jsonBody.Description,
 	}
 
 	// Simpan destinasi ke database
@@ -62,43 +64,39 @@ func CreateDestination(c echo.Context) error {
 	}
 
 	// Simpan data gambar
-	if len(jsonBody.Image) > 0 {
-		for _, img := range jsonBody.Image {
-			image := models.Image{
-				DestinationID: destination.ID,
-				URL:           img,
-			}
-			if err := config.DB.Create(&image).Error; err != nil {
-				return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Failed to add image"})
-			}
+	for _, img := range jsonBody.Image {
+		image := models.Image{
+			DestinationID: destination.ID,
+			URL:           img,
 		}
-	} else {
-		return c.JSON(http.StatusBadRequest, map[string]string{"message": "No images provided"})
+		if err := config.DB.Create(&image).Error; err != nil {
+			return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Failed to add image"})
+		}
 	}
 
 	// Simpan data video
-	if len(jsonBody.Video) > 0 {
-		for _, vid := range jsonBody.Video {
-			video := models.VideoContent{
-				DestinationID: destination.ID,
-				Title:         vid.Title,
-				Description:   vid.Description,
-				URL:           vid.Url,
-			}
-			if err := config.DB.Create(&video).Error; err != nil {
-				return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Failed to add video"})
-			}
-		}
-	} else {
+	if len(jsonBody.Video) == 0 {
 		return c.JSON(http.StatusBadRequest, map[string]string{"message": "No videos provided"})
 	}
 
-	// Muat ulang destinasi dengan properti City dan relasi lainnya (Images, VideoContents)
+	for _, vid := range jsonBody.Video {
+		video := models.VideoContent{
+			DestinationID: destination.ID,
+			Title:         vid.Title,
+			Description:   vid.Description,
+			URL:           vid.Url,
+		}
+		if err := config.DB.Create(&video).Error; err != nil {
+			return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Failed to add video"})
+		}
+	}
+
+	// Muat ulang destinasi dengan properti City
 	if err := config.DB.Preload("City").Preload("Images").Preload("VideoContents").First(&destination, destination.ID).Error; err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Failed to fetch destination with related data"})
 	}
 
-	// Kembalikan respons dengan destinasi lengkap, termasuk gambar dan video
+	// Kembalikan respons dengan properti City yang lengkap
 	return c.JSON(http.StatusOK, destination)
 }
 
