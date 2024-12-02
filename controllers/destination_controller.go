@@ -62,35 +62,43 @@ func CreateDestination(c echo.Context) error {
 	}
 
 	// Simpan data gambar
-	for _, img := range jsonBody.Image {
-		image := models.Image{
-			DestinationID: destination.ID,
-			URL:           img,
+	if len(jsonBody.Image) > 0 {
+		for _, img := range jsonBody.Image {
+			image := models.Image{
+				DestinationID: destination.ID,
+				URL:           img,
+			}
+			if err := config.DB.Create(&image).Error; err != nil {
+				return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Failed to add image"})
+			}
 		}
-		if err := config.DB.Create(&image).Error; err != nil {
-			return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Failed to add image"})
-		}
+	} else {
+		return c.JSON(http.StatusBadRequest, map[string]string{"message": "No images provided"})
 	}
 
 	// Simpan data video
-	for _, vid := range jsonBody.Video {
-		video := models.VideoContent{
-			DestinationID: destination.ID,
-			Title:         vid.Title,
-			Description:   vid.Description,
-			URL:           vid.Url,
+	if len(jsonBody.Video) > 0 {
+		for _, vid := range jsonBody.Video {
+			video := models.VideoContent{
+				DestinationID: destination.ID,
+				Title:         vid.Title,
+				Description:   vid.Description,
+				URL:           vid.Url,
+			}
+			if err := config.DB.Create(&video).Error; err != nil {
+				return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Failed to add video"})
+			}
 		}
-		if err := config.DB.Create(&video).Error; err != nil {
-			return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Failed to add video"})
-		}
+	} else {
+		return c.JSON(http.StatusBadRequest, map[string]string{"message": "No videos provided"})
 	}
 
-	// Muat ulang destinasi dengan properti City
+	// Muat ulang destinasi dengan properti City dan relasi lainnya (Images, VideoContents)
 	if err := config.DB.Preload("City").Preload("Images").Preload("VideoContents").First(&destination, destination.ID).Error; err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Failed to fetch destination with related data"})
 	}
 
-	// Kembalikan respons dengan properti City yang lengkap
+	// Kembalikan respons dengan destinasi lengkap, termasuk gambar dan video
 	return c.JSON(http.StatusOK, destination)
 }
 
