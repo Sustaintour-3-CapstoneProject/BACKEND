@@ -19,7 +19,7 @@ type Input struct {
 	OperationalHours string       `json:"operational_hours"`
 	TicketPrice      float64      `json:"ticket_price"`
 	Category         string       `json:"category"`
-	Description      string       `json:"description`
+	Description      string       `json:"description"`
 	Facilities       string       `json:"facilities"`
 	Image            []string     `json:"image"`
 	Video            []VideoInput `json:"video"`
@@ -63,31 +63,24 @@ func CreateDestination(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Failed to create destination"})
 	}
 
-	// Simpan data gambar
-	for _, img := range jsonBody.Image {
-		image := models.Image{
-			DestinationID: destination.ID,
-			URL:           img,
-		}
-		if err := config.DB.Create(&image).Error; err != nil {
+	for i := 0; i < len(jsonBody.Image); i++ {
+		image := new(models.Image)
+		image.DestinationID = destination.ID
+		image.URL = jsonBody.Image[i]
+		if err := config.DB.Create(image).Error; err != nil {
 			return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Failed to add image"})
 		}
 	}
 
-	// Simpan data video
-	if len(jsonBody.Video) == 0 {
-		return c.JSON(http.StatusBadRequest, map[string]string{"message": "No videos provided"})
-	}
-
-	for _, vid := range jsonBody.Video {
-		video := models.VideoContent{
-			DestinationID: destination.ID,
-			Title:         vid.Title,
-			Description:   vid.Description,
-			URL:           vid.Url,
-		}
-		if err := config.DB.Create(&video).Error; err != nil {
-			return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Failed to add video"})
+	//video
+	for i := 0; i < len(jsonBody.Video); i++ {
+		video := new(models.VideoContent)
+		video.DestinationID = destination.ID
+		video.URL = jsonBody.Video[i].Url
+		video.Title = jsonBody.Video[i].Title
+		video.Description = jsonBody.Video[i].Description
+		if err := config.DB.Create(video).Error; err != nil {
+			return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Failed to add image"})
 		}
 	}
 

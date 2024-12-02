@@ -24,7 +24,7 @@ func InitRoutes(e *echo.Echo) {
 	e.DELETE("/destination/:id", controllers.DeleteDestination)
 
 	// route untuk personalized recommendation
-	e.GET("/destination", controllers.FilterDestinations)
+	e.GET("/destinations", controllers.FilterDestinations)
 
 	// route untuk menambahkan kota
 	e.POST("/city", controllers.CreateCity)
