@@ -49,7 +49,6 @@ func CreateDestination(c echo.Context) error {
 	// Membuat destinasi baru
 	destination := new(models.Destination)
 	destination.Name = jsonBody.Name
-	destination.CityID = city.ID // Menggunakan CityID yang benar
 	destination.Position = jsonBody.Position
 	destination.Address = jsonBody.Address
 	destination.OperationalHours = jsonBody.OperationalHours
