@@ -31,6 +31,7 @@ type VideoInput struct {
 }
 
 func CreateDestination(c echo.Context) error {
+	// Decode body JSON
 	jsonBody := new(Input)
 	err := json.NewDecoder(c.Request().Body).Decode(&jsonBody)
 	if err != nil {
@@ -43,9 +44,10 @@ func CreateDestination(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]string{"message": "City not found"})
 	}
 
+	// Membuat destinasi baru
 	destination := new(models.Destination)
 	destination.Name = jsonBody.Name
-	destination.CityID = city.ID // Menggunakan CityID
+	destination.CityID = city.ID // Menggunakan CityID yang benar
 	destination.Position = jsonBody.Position
 	destination.Address = jsonBody.Address
 	destination.OperationalHours = jsonBody.OperationalHours
@@ -53,33 +55,34 @@ func CreateDestination(c echo.Context) error {
 	destination.Category = jsonBody.Category
 	destination.Facilities = jsonBody.Facilities
 
-	// Menyimpan destination ke database
+	// Menyimpan destinasi ke database
 	if err := config.DB.Create(destination).Error; err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Failed to create destination"})
 	}
 
 	// Menambahkan gambar
-	for i := 0; i < len(jsonBody.Image); i++ {
+	for _, img := range jsonBody.Image {
 		image := new(models.Image)
 		image.DestinationID = destination.ID
-		image.URL = jsonBody.Image[i]
+		image.URL = img
 		if err := config.DB.Create(image).Error; err != nil {
 			return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Failed to add image"})
 		}
 	}
 
 	// Menambahkan video
-	for i := 0; i < len(jsonBody.Video); i++ {
+	for _, vid := range jsonBody.Video {
 		video := new(models.VideoContent)
 		video.DestinationID = destination.ID
-		video.URL = jsonBody.Video[i].Url
-		video.Title = jsonBody.Video[i].Title
-		video.Description = jsonBody.Video[i].Description
+		video.URL = vid.Url
+		video.Title = vid.Title
+		video.Description = vid.Description
 		if err := config.DB.Create(video).Error; err != nil {
 			return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Failed to add video"})
 		}
 	}
 
+	// Kembalikan respons destinasi yang telah berhasil dibuat
 	return c.JSON(http.StatusOK, destination)
 }
 
@@ -123,6 +126,7 @@ func UpdateDestination(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Gagal memperbarui destinasi"})
 	}
 
+	// Kembalikan respons berhasil
 	return c.JSON(http.StatusOK, map[string]string{"message": "Destinasi berhasil diperbarui"})
 }
 
@@ -161,5 +165,4 @@ func GetAllDestinations(c echo.Context) error {
 		"message":      "Destinations fetched successfully",
 		"destinations": destinations,
 	})
-
 }
