@@ -4,6 +4,7 @@ import (
 	"backend/config"
 	"backend/models"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -163,13 +164,20 @@ func DeleteDestination(c echo.Context) error {
 func GetAllDestinations(c echo.Context) error {
 	var destinations []models.Destination
 
-	// Preload semua data terkait: City, Images, dan VideoContents
-	if err := config.DB.
-		Preload("City").          // Preload relasi City
-		Preload("Images").        // Preload relasi Images
-		Preload("VideoContents"). // Preload relasi VideoContents
-		Find(&destinations).Error; err != nil {
+	// Preload semua data terkait
+	err := config.DB.
+		Preload("City").
+		Preload("Images").
+		Preload("VideoContents").
+		Find(&destinations).Error
+
+	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Failed to fetch destinations"})
+	}
+
+	// Debug log untuk melihat hasil preload
+	for _, dest := range destinations {
+		fmt.Printf("Destination ID: %d, VideoContents: %v\n", dest.ID, dest.VideoContents)
 	}
 
 	return c.JSON(http.StatusOK, map[string]interface{}{
