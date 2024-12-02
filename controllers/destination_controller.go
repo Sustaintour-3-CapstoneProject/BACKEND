@@ -12,7 +12,7 @@ import (
 
 type Input struct {
 	Name             string       `json:"name"`
-	City             string       `json:"string"`
+	City             string       `json:"city"`
 	Position         float64      `json:"position"`
 	Address          string       `json:"address"`
 	OperationalHours string       `json:"operational_hours"`
