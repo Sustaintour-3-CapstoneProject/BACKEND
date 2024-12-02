@@ -78,6 +78,20 @@ func LoginHandler(c echo.Context) error {
 	return c.JSON(http.StatusOK, response)
 }
 
+func LogoutHandler(c echo.Context) error {
+	cookie := &http.Cookie{
+		Name:     "token",
+		Value:    "",
+		Path:     "/",
+		HttpOnly: true,
+		MaxAge:   -1,
+	}
+	c.SetCookie(cookie)
+	return c.JSON(http.StatusOK, map[string]interface{}{
+		"message": "Berhasil Logout",
+	})
+}
+
 // RegisterHandler menangani proses registrasi
 func RegisterHandler(c echo.Context) error {
 	var input RegisterInput

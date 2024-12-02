@@ -35,6 +35,7 @@ func InitRoutes(e *echo.Echo) {
 	// Rute autentikasi
 	e.POST("/api/v1/register", controllers.RegisterHandler)
 	e.POST("/api/v1/login", controllers.LoginHandler)
+	e.GET("/api/v1/logout", controllers.LogoutHandler)
 
 	// Route untuk destinasi
 	e.POST("/api/v1/destination", controllers.CreateDestination)
