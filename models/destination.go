@@ -10,7 +10,7 @@ type Destination struct {
 	ID               uint           `gorm:"primaryKey" json:"id"`
 	Name             string         `json:"name"`
 	CityID           uint           `json:"city_id"`
-	City             City           `gorm:"foreignKey:CityID" json:"city"` // <-- Perbaiki di sini
+	City             string         `json:"city"`
 	Position         float64        `json:"position"`
 	Address          string         `json:"address"`
 	OperationalHours string         `json:"operational_hours"`

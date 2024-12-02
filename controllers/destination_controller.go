@@ -4,7 +4,6 @@ import (
 	"backend/config"
 	"backend/models"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"strconv"
 
@@ -32,59 +31,57 @@ type VideoInput struct {
 }
 
 func CreateDestination(c echo.Context) error {
-	// Decode body JSON
 	jsonBody := new(Input)
-	err := json.NewDecoder(c.Request().Body).Decode(&jsonBody)
-	if err != nil {
+	if err := json.NewDecoder(c.Request().Body).Decode(&jsonBody); err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"message": "Invalid JSON body"})
 	}
 
-	// Cari CityID berdasarkan nama kota
+	// Cari City berdasarkan nama
 	var city models.City
-	fmt.Println(city)
 	if err := config.DB.Where("name = ?", jsonBody.City).First(&city).Error; err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"message": "City not found"})
 	}
 
-	// Membuat destinasi baru
-	destination := new(models.Destination)
-	destination.Name = jsonBody.Name
-	destination.CityID = city.ID
-	destination.Position = jsonBody.Position
-	destination.Address = jsonBody.Address
-	destination.OperationalHours = jsonBody.OperationalHours
-	destination.TicketPrice = jsonBody.TicketPrice
-	destination.Category = jsonBody.Category
-	destination.Facilities = jsonBody.Facilities
+	// Buat destinasi baru
+	destination := models.Destination{
+		Name:             jsonBody.Name,
+		CityID:           city.ID, // Gunakan ID dari City yang ditemukan
+		Position:         jsonBody.Position,
+		Address:          jsonBody.Address,
+		OperationalHours: jsonBody.OperationalHours,
+		TicketPrice:      jsonBody.TicketPrice,
+		Category:         jsonBody.Category,
+		Facilities:       jsonBody.Facilities,
+	}
 
-	// Menyimpan destinasi ke database
-	if err := config.DB.Create(destination).Error; err != nil {
+	if err := config.DB.Create(&destination).Error; err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Failed to create destination"})
 	}
 
-	// Menambahkan gambar
+	// Simpan data gambar
 	for _, img := range jsonBody.Image {
-		image := new(models.Image)
-		image.DestinationID = destination.ID
-		image.URL = img
-		if err := config.DB.Create(image).Error; err != nil {
+		image := models.Image{
+			DestinationID: destination.ID,
+			URL:           img,
+		}
+		if err := config.DB.Create(&image).Error; err != nil {
 			return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Failed to add image"})
 		}
 	}
 
-	// Menambahkan video
+	// Simpan data video
 	for _, vid := range jsonBody.Video {
-		video := new(models.VideoContent)
-		video.DestinationID = destination.ID
-		video.URL = vid.Url
-		video.Title = vid.Title
-		video.Description = vid.Description
-		if err := config.DB.Create(video).Error; err != nil {
+		video := models.VideoContent{
+			DestinationID: destination.ID,
+			Title:         vid.Title,
+			Description:   vid.Description,
+			URL:           vid.Url,
+		}
+		if err := config.DB.Create(&video).Error; err != nil {
 			return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Failed to add video"})
 		}
 	}
 
-	// Kembalikan respons destinasi yang telah berhasil dibuat
 	return c.JSON(http.StatusOK, destination)
 }
 
@@ -158,8 +155,12 @@ func DeleteDestination(c echo.Context) error {
 func GetAllDestinations(c echo.Context) error {
 	var destinations []models.Destination
 
-	// Preload gambar dan video terkait dengan destinasi
-	if err := config.DB.Preload("Images").Preload("VideoContents").Find(&destinations).Error; err != nil {
+	// Preload semua data terkait: City, Images, dan VideoContents
+	if err := config.DB.
+		Preload("City").          // Preload relasi City
+		Preload("Images").        // Preload relasi Images
+		Preload("VideoContents"). // Preload relasi VideoContents
+		Find(&destinations).Error; err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Failed to fetch destinations"})
 	}
 
