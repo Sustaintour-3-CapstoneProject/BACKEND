@@ -17,12 +17,13 @@ type LoginInput struct {
 
 // Struct untuk validasi input registrasi
 type RegisterInput struct {
-	Username    string `json:"username" validate:"required,alphanum"`
-	FirstName   string `json:"first_name" validate:"required"`
-	LastName    string `json:"last_name" validate:"required"`
-	PhoneNumber string `json:"phone_number" validate:"required"`
-	Password    string `json:"password" validate:"required,min=6"`
-	Role        string `json:"role,omitempty" validate:"omitempty,oneof=admin user"`
+	Username  string `json:"username" validate:"required,alphanum"`
+	FirstName string `json:"first_name" validate:"required"`
+	LastName  string `json:"last_name" validate:"required"`
+	Email     string `json:"email" validate:"required,email"`
+	City      string `json:"city" validate:"required"`
+	Password  string `json:"password" validate:"required,min=6"`
+	Role      string `json:"role,omitempty" validate:"omitempty,oneof=admin user"`
 }
 
 // LoginHandler menangani proses login
@@ -69,7 +70,8 @@ func LoginHandler(c echo.Context) error {
 		"username":   user.Username,
 		"first_name": user.FirstName,
 		"last_name":  user.LastName,
-		"phone":      user.PhoneNumber,
+		"email":      user.Email,
+		"city":       user.City,
 		"role":       user.Role,
 		"token":      token,
 	}
@@ -123,12 +125,13 @@ func RegisterHandler(c echo.Context) error {
 
 	// Membuat objek user
 	user := models.User{
-		Username:    input.Username,
-		FirstName:   input.FirstName,
-		LastName:    input.LastName,
-		PhoneNumber: input.PhoneNumber,
-		Password:    hashedPassword,
-		Role:        input.Role,
+		Username:  input.Username,
+		FirstName: input.FirstName,
+		LastName:  input.LastName,
+		Email:     input.Email,
+		City:      input.City,
+		Password:  hashedPassword,
+		Role:      input.Role,
 	}
 
 	// Simpan ke database
@@ -150,7 +153,8 @@ func RegisterHandler(c echo.Context) error {
 		"username":   user.Username,
 		"first_name": user.FirstName,
 		"last_name":  user.LastName,
-		"phone":      user.PhoneNumber,
+		"email":      user.Email,
+		"city":       user.City,
 		"role":       user.Role,
 		"token":      token,
 	}
