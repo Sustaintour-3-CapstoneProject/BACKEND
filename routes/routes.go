@@ -18,10 +18,16 @@ func InitRoutes(e *echo.Echo) {
 	e.GET("/logout", controllers.LogoutHandler)
 
 	// Route untuk destinasi
-	e.POST("/destination", controllers.CreateDestination)
-	e.GET("/destination", controllers.GetAllDestinations)
-	e.PUT("/destination/:id", controllers.UpdateDestination) // Endpoint untuk mengubah destinasi
-	e.DELETE("/destination/:id", controllers.DeleteDestination)
+	destinationGroup := e.Group("/destination")
+
+	destinationGroup.POST("", controllers.CreateDestination)
+	destinationGroup.GET("", controllers.GetAllDestinations)
+	destinationGroup.GET("/:id", controllers.GetDetailDestination)
+	destinationGroup.DELETE("/:id", controllers.DeleteDestination)
+	destinationGroup.PUT("/:id", controllers.UpdateDestination)
+
+	destinationVideoContentGroup := e.Group("/video-content")
+	destinationVideoContentGroup.GET("/most", controllers.GetMostViewedVideoContent)
 
 	// route untuk personalized recommendation
 	e.GET("/destinations", controllers.FilterDestinations)

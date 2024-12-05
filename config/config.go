@@ -43,6 +43,7 @@ func InitDB() {
 		&models.VideoContent{},
 		&models.Image{},
 		&models.City{},
+		&models.VideoContentView{},
 	)
 
 }

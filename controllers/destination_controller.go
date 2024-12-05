@@ -4,11 +4,11 @@ import (
 	"backend/config"
 	"backend/models"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"strconv"
 
 	"github.com/labstack/echo/v4"
+	"gorm.io/gorm"
 )
 
 type Input struct {
@@ -22,7 +22,7 @@ type Input struct {
 	Description      string       `json:"description"`
 	Facilities       string       `json:"facilities"`
 	Image            []string     `json:"image"`
-	Video            []VideoInput `json:"video"`
+	Video            []VideoInput `json:"video_contents"`
 }
 
 // video
@@ -163,24 +163,78 @@ func DeleteDestination(c echo.Context) error {
 func GetAllDestinations(c echo.Context) error {
 	var destinations []models.Destination
 
-	// Preload semua data terkait
-	err := config.DB.
+	queryName := c.QueryParam("name")
+	queryCityID := c.QueryParam("city")
+
+	query := config.DB.
 		Preload("City").
 		Preload("Images").
-		Preload("VideoContents").
-		Find(&destinations).Error
+		Preload("VideoContents")
 
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Failed to fetch destinations"})
+	if queryName != "" {
+		query = query.Where("name LIKE ?", "%"+queryName+"%")
 	}
 
-	// Debug log untuk melihat hasil preload
-	for _, dest := range destinations {
-		fmt.Printf("Destination ID: %d, VideoContents: %v\n", dest.ID, dest.VideoContents)
+	if queryCityID != "" {
+		query = query.Where("city_id = ?", queryCityID)
+	}
+
+	err := query.Find(&destinations).Error
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Failed to fetch destinations"})
 	}
 
 	return c.JSON(http.StatusOK, map[string]interface{}{
 		"message":      "Destinations fetched successfully",
 		"destinations": destinations,
+	})
+}
+
+func GetDetailDestination(c echo.Context) error {
+	var destination models.Destination
+
+	id := c.Param("id")
+
+	err := config.DB.
+		Preload("City").
+		Preload("Images").
+		Preload("VideoContents").
+		First(&destination, "id = ?", id).Error
+
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return c.JSON(http.StatusNotFound, map[string]string{"message": "Destination not found"})
+		}
+		return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Failed to fetch destination details"})
+	}
+
+	return c.JSON(http.StatusOK, map[string]interface{}{
+		"message":     "Destination details fetched successfully",
+		"destination": destination,
+	})
+}
+
+func GetMostViewedVideoContent(c echo.Context) error {
+	var results []struct {
+		ID          uint   `json:"id"`
+		Title       string `json:"title"`
+		URL         string `json:"url"`
+		Description string `json:"description"`
+		ViewCount   int64  `json:"view_count"`
+	}
+
+	err := config.DB.Table("video_contents").
+		Select("video_contents.id, video_contents.title, video_contents.url, video_contents.description, COUNT(video_content_views.id) as view_count").
+		Joins("LEFT JOIN video_content_views ON video_contents.id = video_content_views.video_content_id").
+		Group("video_contents.id").
+		Order("view_count DESC").
+		Scan(&results).Error
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Failed to fetch data"})
+	}
+
+	return c.JSON(http.StatusOK, map[string]interface{}{
+		"message": "Videos with view count fetched successfully",
+		"data":    results,
 	})
 }
