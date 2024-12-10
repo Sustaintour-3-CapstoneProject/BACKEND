@@ -37,4 +37,9 @@ func InitRoutes(e *echo.Echo) {
 	e.POST("/city", controllers.CreateCity)
 	e.GET("/city", controllers.GetCity)
 
+	routeGroup := e.Group("/route", middlewares.AuthorizedAccess)
+	routeGroup.POST("", controllers.CreateRoute, middlewares.AdminOnly)
+	routeGroup.GET("", controllers.GetRouteByUser, middlewares.AdminOnly)
+	routeGroup.DELETE("/:id", controllers.DeleteRoute, middlewares.AdminOnly)
+
 }
