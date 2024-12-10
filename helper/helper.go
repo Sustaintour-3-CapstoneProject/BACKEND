@@ -1,11 +1,20 @@
 package helper
 
 import (
+	"bytes"
+	"encoding/json"
+	"fmt"
+	"io/ioutil"
+	"log"
+	"math"
+	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/joho/godotenv"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -83,4 +92,101 @@ func GenerateJWT(userID uint, username, role string) (string, error) {
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	return token.SignedString([]byte(os.Getenv("JWT_SECRET_KEY")))
+}
+
+type GeminiResponse struct {
+	Candidates []struct {
+		Content struct {
+			Parts []struct {
+				Text string `json:"text"`
+			} `json:"parts"`
+			Role string `json:"role"`
+		} `json:"content"`
+		FinishReason string  `json:"finishReason"`
+		AvgLogprobs  float64 `json:"avgLogprobs"`
+	} `json:"candidates"`
+	UsageMetadata struct {
+		PromptTokenCount     int `json:"promptTokenCount"`
+		CandidatesTokenCount int `json:"candidatesTokenCount"`
+		TotalTokenCount      int `json:"totalTokenCount"`
+	} `json:"usageMetadata"`
+	ModelVersion string `json:"modelVersion"`
+}
+
+func CallGeminiAPI(message string) (string, error) {
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+
+	apiKey := os.Getenv("GEMINI_API_KEY")
+	baseURL := os.Getenv("GEMINI_BASE_URL") + "?key=" + apiKey
+
+	payload := map[string]interface{}{
+		"contents": []map[string]interface{}{
+			{
+				"parts": []map[string]string{
+					{"text": message},
+				},
+			},
+		},
+	}
+
+	if strings.Contains(message, "halo") {
+		return "Selamat Datang di Tripwise, folks!", nil
+	}
+
+	jsonBytes, err := json.Marshal(payload)
+	if err != nil {
+		fmt.Println("Error marshaling to JSON:", err)
+	}
+
+	req, err := http.NewRequest("POST", baseURL, bytes.NewBuffer(jsonBytes))
+	if err != nil {
+		fmt.Println("Error creating request:", err)
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+	// req.Header.Set("Authorization", "Bearer "+apiKey)
+
+	// Send the request
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		fmt.Println("Error making request:", err)
+	}
+	defer resp.Body.Close()
+
+	// Handle the response
+	body, _ := ioutil.ReadAll(resp.Body)
+	if resp.StatusCode != http.StatusOK {
+		fmt.Println("Error response from API:")
+		fmt.Println(string(body))
+	} else {
+		fmt.Println("Response from API:")
+		fmt.Println(string(body))
+	}
+
+	var response GeminiResponse
+	err = json.Unmarshal(body, &response)
+	if err != nil {
+		fmt.Println("Error unmarshaling JSON:", err)
+	}
+
+	return response.Candidates[0].Content.Parts[0].Text, nil
+}
+
+func Haversine(lat1, lon1, lat2, lon2 float64) float64 {
+	const R = 6371 // Earth radius in kilometers
+	latDiff := (lat2 - lat1) * (math.Pi / 180)
+	lonDiff := (lon2 - lon1) * (math.Pi / 180)
+
+	lat1Rad := lat1 * (math.Pi / 180)
+	lat2Rad := lat2 * (math.Pi / 180)
+
+	a := math.Sin(latDiff/2)*math.Sin(latDiff/2) +
+		math.Cos(lat1Rad)*math.Cos(lat2Rad)*math.Sin(lonDiff/2)*math.Sin(lonDiff/2)
+	c := 2 * math.Atan2(math.Sqrt(a), math.Sqrt(1-a))
+
+	return R * c
 }
