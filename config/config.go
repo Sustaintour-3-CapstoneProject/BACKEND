@@ -44,6 +44,8 @@ func InitDB() {
 		&models.Image{},
 		&models.City{},
 		&models.VideoContentView{},
+		&models.Route{},
+		&models.RouteDestination{},
 	)
 
 }
