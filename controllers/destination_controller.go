@@ -2,39 +2,22 @@ package controllers
 
 import (
 	"backend/config"
+	"backend/helper"
 	"backend/models"
+	"backend/request"
+	"backend/response"
 	"encoding/json"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/labstack/echo/v4"
 	"gorm.io/gorm"
 )
 
-type Input struct {
-	Name             string       `json:"name"`
-	City             string       `json:"city"`
-	Position         float64      `json:"position"`
-	Address          string       `json:"address"`
-	OperationalHours string       `json:"operational_hours"`
-	TicketPrice      float64      `json:"ticket_price"`
-	Category         string       `json:"category"`
-	Description      string       `json:"description"`
-	Facilities       string       `json:"facilities"`
-	Image            []string     `json:"image"`
-	Video            []VideoInput `json:"video_contents"`
-}
-
-// video
-type VideoInput struct {
-	Title       string `json:"title"`
-	Description string `json:"description"`
-	Url         string `json:"url"`
-}
-
 func CreateDestination(c echo.Context) error {
 	// Decode JSON body
-	jsonBody := new(Input)
+	jsonBody := new(request.CreateDestinationInput)
 	if err := json.NewDecoder(c.Request().Body).Decode(jsonBody); err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"message": "Invalid JSON body"})
 	}
@@ -102,7 +85,7 @@ func UpdateDestination(c echo.Context) error {
 	}
 
 	// Parse body request ke struct Input
-	jsonBody := new(Input)
+	jsonBody := new(request.CreateDestinationInput)
 	if err := json.NewDecoder(c.Request().Body).Decode(jsonBody); err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"message": "Invalid JSON body"})
 	}
@@ -139,32 +122,54 @@ func UpdateDestination(c echo.Context) error {
 
 // Fungsi untuk menghapus destinasi berdasarkan ID
 func DeleteDestination(c echo.Context) error {
-	// Ambil ID destinasi dari parameter URL
+	// Retrieve the destination ID from the URL parameter
 	id := c.Param("id")
 	destinationID, err := strconv.Atoi(id)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"message": "ID destinasi tidak valid"})
+		return c.JSON(http.StatusBadRequest, map[string]string{"message": "Invalid destination ID"})
 	}
 
-	// Cari destinasi berdasarkan ID
+	// Find the destination by ID, including its related entities
 	var destination models.Destination
-	if err := config.DB.First(&destination, destinationID).Error; err != nil {
-		return c.JSON(http.StatusNotFound, map[string]string{"message": "Destinasi tidak ditemukan"})
+	if err := config.DB.Preload("Images").Preload("VideoContents").First(&destination, destinationID).Error; err != nil {
+		return c.JSON(http.StatusNotFound, map[string]string{"message": "Destination not found"})
 	}
 
-	// Hapus destinasi
-	if err := config.DB.Delete(&destination).Error; err != nil {
-		return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Gagal menghapus destinasi"})
+	// Start a transaction to ensure atomicity
+	tx := config.DB.Begin()
+
+	// Delete related Images
+	if err := tx.Delete(&destination.Images).Error; err != nil {
+		tx.Rollback()
+		return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Failed to delete related images"})
 	}
 
-	return c.JSON(http.StatusOK, map[string]string{"message": "Destinasi berhasil dihapus"})
+	// Delete related VideoContents
+	if err := tx.Delete(&destination.VideoContents).Error; err != nil {
+		tx.Rollback()
+		return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Failed to delete related video contents"})
+	}
+
+	// Delete the destination
+	if err := tx.Delete(&destination).Error; err != nil {
+		tx.Rollback()
+		return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Failed to delete destination"})
+	}
+
+	// Commit the transaction
+	tx.Commit()
+
+	return c.JSON(http.StatusOK, map[string]string{"message": "Destination and related data successfully deleted"})
 }
 
 func GetAllDestinations(c echo.Context) error {
 	var destinations []models.Destination
+	var destinationResponses []response.DestinationResponse
 
 	queryName := c.QueryParam("name")
 	queryCityID := c.QueryParam("city")
+	querySort := c.QueryParam("sort")
+	queryCategory := c.QueryParam("category")
 
 	query := config.DB.
 		Preload("City").
@@ -179,22 +184,65 @@ func GetAllDestinations(c echo.Context) error {
 		query = query.Where("city_id = ?", queryCityID)
 	}
 
+	if queryCategory != "" {
+		query = query.Where("category = ?", queryCategory)
+	}
+
+	if querySort != "" {
+		if querySort == "oldest" {
+			query = query.Order("created_at ASC")
+		} else {
+			query = query.Order("created_at DESC")
+		}
+	}
+
 	err := query.Find(&destinations).Error
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Failed to fetch destinations"})
 	}
 
+	for _, dest := range destinations {
+		var facilitiesArray []string
+		if dest.Facilities != "" {
+			facilitiesArray = make([]string, 0)
+			for _, facility := range strings.Split(dest.Facilities, ",") {
+				facilitiesArray = append(facilitiesArray, strings.TrimSpace(facility))
+			}
+		}
+
+		destinationResponse := response.DestinationResponse{
+			ID:               dest.ID,
+			Name:             dest.Name,
+			City:             response.City{ID: dest.City.ID, Name: dest.City.Name},
+			Position:         dest.Position,
+			Address:          dest.Address,
+			OperationalHours: dest.OperationalHours,
+			TicketPrice:      dest.TicketPrice,
+			Category:         dest.Category,
+			Description:      dest.Description,
+			Facilities:       facilitiesArray,
+			CreatedAt:        dest.CreatedAt,
+			Images:           convertImagesToResponse(dest.Images),
+			VideoContents:    convertVideosToResponse(dest.VideoContents),
+		}
+
+		destinationResponses = append(destinationResponses, destinationResponse)
+	}
+
+	// Return the response with the destinations
 	return c.JSON(http.StatusOK, map[string]interface{}{
 		"message":      "Destinations fetched successfully",
-		"destinations": destinations,
+		"destinations": destinationResponses,
 	})
 }
 
 func GetDetailDestination(c echo.Context) error {
 	var destination models.Destination
+	var destinationResponse response.DestinationResponse
 
 	id := c.Param("id")
 
+	// Fetch the destination details with related data
 	err := config.DB.
 		Preload("City").
 		Preload("Images").
@@ -208,33 +256,167 @@ func GetDetailDestination(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Failed to fetch destination details"})
 	}
 
+	// Convert Facilities field to an array of strings and trim spaces
+	var facilitiesArray []string
+	if destination.Facilities != "" {
+		// Split the Facilities string and trim spaces for each element
+		facilitiesArray = make([]string, 0)
+		for _, facility := range strings.Split(destination.Facilities, ",") {
+			facilitiesArray = append(facilitiesArray, strings.TrimSpace(facility))
+		}
+	}
+
+	// Populate the response struct with the destination details
+	destinationResponse = response.DestinationResponse{
+		ID:               destination.ID,
+		Name:             destination.Name,
+		City:             response.City{ID: destination.City.ID, Name: destination.City.Name},
+		Position:         destination.Position,
+		Address:          destination.Address,
+		OperationalHours: destination.OperationalHours,
+		TicketPrice:      destination.TicketPrice,
+		Category:         destination.Category,
+		Description:      destination.Description,
+		Facilities:       facilitiesArray, // Facilities as array of strings
+		CreatedAt:        destination.CreatedAt,
+		Images:           convertImagesToResponse(destination.Images),
+		VideoContents:    convertVideosToResponse(destination.VideoContents),
+	}
+
+	// Return the response
 	return c.JSON(http.StatusOK, map[string]interface{}{
 		"message":     "Destination details fetched successfully",
-		"destination": destination,
+		"destination": destinationResponse,
 	})
 }
 
 func GetMostViewedVideoContent(c echo.Context) error {
 	var results []struct {
 		ID          uint   `json:"id"`
-		Title       string `json:"title"`
-		URL         string `json:"url"`
+		Name        string `json:"name"`
+		Address     string `json:"address"`
 		Description string `json:"description"`
 		ViewCount   int64  `json:"view_count"`
 	}
 
-	err := config.DB.Table("video_contents").
-		Select("video_contents.id, video_contents.title, video_contents.url, video_contents.description, COUNT(video_content_views.id) as view_count").
-		Joins("LEFT JOIN video_content_views ON video_contents.id = video_content_views.video_content_id").
-		Group("video_contents.id").
+	// Query to join Destination with VideoContentView and calculate view counts
+	err := config.DB.Table("destinations").
+		Select("destinations.id, destinations.name, destinations.address, destinations.description, COUNT(video_content_views.id) as view_count").
+		Joins("LEFT JOIN video_content_views ON destinations.id = video_content_views.destination_id").
+		Group("destinations.id").
 		Order("view_count DESC").
 		Scan(&results).Error
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Failed to fetch data"})
 	}
 
+	// Convert the result to a format similar to DestinationResponse
+	var responseResults []map[string]interface{}
+	for _, result := range results {
+		var videos []models.VideoContent
+		_ = config.DB.
+			Find(&videos, "destination_id = ?", result.ID)
+
+		responseResults = append(responseResults, map[string]interface{}{
+			"id":          result.ID,
+			"name":        result.Name,
+			"address":     result.Address,
+			"description": result.Description,
+			"view_count":  result.ViewCount,
+			"videos":      videos,
+		})
+	}
+
+	// Return the result as JSON
 	return c.JSON(http.StatusOK, map[string]interface{}{
-		"message": "Videos with view count fetched successfully",
-		"data":    results,
+		"message": "Destinations with view count fetched successfully",
+		"data":    responseResults,
+	})
+}
+
+func convertImagesToResponse(images []models.Image) []response.Image {
+	var imageResponses []response.Image
+	for _, img := range images {
+		imageResponses = append(imageResponses, response.Image{
+			DestinationID: img.DestinationID,
+			URL:           img.URL,
+		})
+	}
+	return imageResponses
+}
+
+func convertVideosToResponse(videos []models.VideoContent) []response.VideoContent {
+	var videoResponses []response.VideoContent
+	for _, video := range videos {
+		videoResponses = append(videoResponses, response.VideoContent{
+			DestinationID: video.DestinationID,
+			Title:         video.Title,
+			URL:           video.URL,
+			Description:   video.Description,
+		})
+	}
+	return videoResponses
+}
+
+func GetPersonalizedDestinationByUser(c echo.Context) error {
+	var destinations []models.Destination
+	var destinationResponses []response.DestinationResponse
+
+	userID := c.QueryParam("user_id")
+
+	var user models.User
+	result := config.DB.First(&user, "id = ?", userID)
+	if result.Error != nil || user.ID == 0 {
+		response := helper.APIResponse("User not found", http.StatusUnauthorized, "error", nil)
+		return c.JSON(http.StatusUnauthorized, response)
+	}
+
+	query := config.DB.
+		Preload("City").
+		Preload("Images").
+		Preload("VideoContents")
+
+	categories := strings.Split(user.Category, ",")
+	for i := range categories {
+		categories[i] = strings.ToUpper(strings.TrimSpace(categories[i]))
+	}
+	query = query.Where("category IN ?", categories)
+
+	err := query.Find(&destinations).Error
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Failed to fetch destinations"})
+	}
+
+	for _, dest := range destinations {
+		var facilitiesArray []string
+		if dest.Facilities != "" {
+			facilitiesArray = make([]string, 0)
+			for _, facility := range strings.Split(dest.Facilities, ",") {
+				facilitiesArray = append(facilitiesArray, strings.TrimSpace(facility))
+			}
+		}
+
+		destinationResponse := response.DestinationResponse{
+			ID:               dest.ID,
+			Name:             dest.Name,
+			City:             response.City{ID: dest.City.ID, Name: dest.City.Name},
+			Position:         dest.Position,
+			Address:          dest.Address,
+			OperationalHours: dest.OperationalHours,
+			TicketPrice:      dest.TicketPrice,
+			Category:         dest.Category,
+			Description:      dest.Description,
+			Facilities:       facilitiesArray,
+			CreatedAt:        dest.CreatedAt,
+			Images:           convertImagesToResponse(dest.Images),
+			VideoContents:    convertVideosToResponse(dest.VideoContents),
+		}
+
+		destinationResponses = append(destinationResponses, destinationResponse)
+	}
+
+	return c.JSON(http.StatusOK, map[string]interface{}{
+		"message": "Destinations fetched successfully",
+		"data":    destinationResponses,
 	})
 }

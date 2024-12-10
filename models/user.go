@@ -11,4 +11,5 @@ type User struct {
 	City      string `json:"city"`
 	Password  string `json:"password"`
 	Role      string `json:"role"`
+	Category  string `json:"category"`
 }

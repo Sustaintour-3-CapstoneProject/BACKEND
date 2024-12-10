@@ -22,6 +22,7 @@ func InitRoutes(e *echo.Echo) {
 
 	destinationGroup.POST("", controllers.CreateDestination)
 	destinationGroup.GET("", controllers.GetAllDestinations)
+	destinationGroup.GET("/personalized", controllers.GetPersonalizedDestinationByUser)
 	destinationGroup.GET("/:id", controllers.GetDetailDestination)
 	destinationGroup.DELETE("/:id", controllers.DeleteDestination)
 	destinationGroup.PUT("/:id", controllers.UpdateDestination)
