@@ -5,6 +5,7 @@ import (
 	"backend/helper"
 	"backend/models"
 	"net/http"
+	"strings"
 
 	"github.com/labstack/echo/v4"
 )
@@ -17,13 +18,14 @@ type LoginInput struct {
 
 // Struct untuk validasi input registrasi
 type RegisterInput struct {
-	Username  string `json:"username" validate:"required,alphanum"`
-	FirstName string `json:"first_name" validate:"required"`
-	LastName  string `json:"last_name" validate:"required"`
-	Email     string `json:"email" validate:"required,email"`
-	City      string `json:"city" validate:"required"`
-	Password  string `json:"password" validate:"required,min=6"`
-	Role      string `json:"role,omitempty" validate:"omitempty,oneof=admin user"`
+	Username  string   `json:"username" validate:"required,alphanum"`
+	FirstName string   `json:"first_name" validate:"required"`
+	LastName  string   `json:"last_name" validate:"required"`
+	Email     string   `json:"email" validate:"required,email"`
+	City      string   `json:"city" validate:"required"`
+	Password  string   `json:"password" validate:"required,min=6"`
+	Role      string   `json:"role,omitempty" validate:"omitempty,oneof=admin user"`
+	Category  []string `json:"category"`
 }
 
 // LoginHandler menangani proses login
@@ -123,6 +125,8 @@ func RegisterHandler(c echo.Context) error {
 		input.Role = "user"
 	}
 
+	categoryString := strings.ToUpper(strings.Join(input.Category, ","))
+
 	// Membuat objek user
 	user := models.User{
 		Username:  input.Username,
@@ -132,6 +136,7 @@ func RegisterHandler(c echo.Context) error {
 		City:      input.City,
 		Password:  hashedPassword,
 		Role:      input.Role,
+		Category:  categoryString,
 	}
 
 	// Simpan ke database
@@ -147,6 +152,11 @@ func RegisterHandler(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, response)
 	}
 
+	categories := strings.Split(user.Category, ",")
+	for i, category := range categories {
+		categories[i] = strings.ToUpper(strings.TrimSpace(category))
+	}
+
 	// Response data
 	data := map[string]interface{}{
 		"id_user":    user.ID,
@@ -157,6 +167,7 @@ func RegisterHandler(c echo.Context) error {
 		"city":       user.City,
 		"role":       user.Role,
 		"token":      token,
+		"category":   categories,
 	}
 
 	response := helper.APIResponse("Registration successful", http.StatusOK, "success", data)
