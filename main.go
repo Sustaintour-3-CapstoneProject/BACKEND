@@ -3,7 +3,10 @@ package main
 import (
 	"backend/config"
 	"backend/routes"
+	"log"
+	"os"
 
+	"github.com/joho/godotenv"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 )
@@ -13,6 +16,8 @@ func main() {
 
 	// Initialize Database
 	config.InitDB()
+
+	os.Mkdir("assets", 0777)
 
 	// Apply CORS middleware with custom config
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
@@ -25,10 +30,16 @@ func main() {
 		},
 	}))
 
+	e.Static("/assets", "./assets")
+
 	// Register Routes
 	routes.InitRoutes(e)
 
-	
 	// Start Server
-	e.Logger.Fatal(e.Start(":8000"))
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+
+	e.Logger.Fatal(e.Start(":" + os.Getenv("APP_PORT")))
 }

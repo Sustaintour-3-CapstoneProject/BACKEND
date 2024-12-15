@@ -8,6 +8,15 @@ import (
 )
 
 func InitRoutes(e *echo.Echo) {
+	e.GET("/dashboard/count-data", controllers.GetDashboardDataHandler)
+	e.GET("/dashboard/graphic", controllers.GetDashboardGraphicDataHandler)
+
+	userGroup := e.Group("/user", middlewares.AuthorizedAccess)
+	userGroup.GET("", controllers.GetAllUserHandler)
+	userGroup.POST("/category", controllers.CreateUserCategoryHandler)
+	userGroup.GET("/:id", controllers.GetDetailUserHandler)
+	userGroup.PUT("/:id", controllers.EditUserHandler)
+	userGroup.DELETE("/:id", controllers.DeleteUser)
 
 	e.POST("/register", controllers.RegisterHandler)
 	e.POST("/login", controllers.LoginHandler)
@@ -19,6 +28,7 @@ func InitRoutes(e *echo.Echo) {
 	destinationGroup.GET("/:id", controllers.GetDetailDestination)
 
 	destinationVideoContentGroup := e.Group("/video-content")
+	destinationVideoContentGroup.GET("", controllers.GetAllVideoContents)
 	destinationVideoContentGroup.GET("/most", controllers.GetMostViewedVideoContent)
 
 	e.GET("/destinations", controllers.FilterDestinations)
@@ -29,14 +39,13 @@ func InitRoutes(e *echo.Echo) {
 	e.POST("/chat", controllers.ChatHandler)
 
 	destinationGroup.POST("", controllers.CreateDestination, middlewares.AdminOnly)
+	destinationGroup.POST("/assets", controllers.CreateDestinationAssetsHandler, middlewares.AdminOnly)
 	destinationGroup.PUT("/:id", controllers.UpdateDestination, middlewares.AdminOnly)
 	destinationGroup.DELETE("/:id", controllers.DeleteDestination, middlewares.AdminOnly)
 
 	routeGroup := e.Group("/route", middlewares.AuthorizedAccess)
 	routeGroup.POST("", controllers.CreateRoute)
 	routeGroup.GET("", controllers.GetRouteByUser)
-	routeGroup.DELETE("/:id", controllers.DeleteRoute, middlewares.AdminOnly)
-
-	e.GET("/dashboard/count-data", controllers.GetDashboardDataHandler)
-	e.GET("/dashboard/graphic", controllers.GetDashboardGraphicDataHandler)
+	routeGroup.GET("/destination", controllers.GetDestinationsByRoute)
+	routeGroup.DELETE("/:id", controllers.DeleteRoute)
 }
