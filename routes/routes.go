@@ -36,4 +36,7 @@ func InitRoutes(e *echo.Echo) {
 	routeGroup.POST("", controllers.CreateRoute)
 	routeGroup.GET("", controllers.GetRouteByUser)
 	routeGroup.DELETE("/:id", controllers.DeleteRoute, middlewares.AdminOnly)
+
+	e.GET("/dashboard/count-data", controllers.GetDashboardDataHandler)
+	e.GET("/dashboard/graphic", controllers.GetDashboardGraphicDataHandler)
 }
