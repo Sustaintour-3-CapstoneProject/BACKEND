@@ -298,6 +298,7 @@ func GetAllUserHandler(c echo.Context) error {
 		}
 
 		var response = response.UserResponse{
+			ID:          users[i].ID,
 			Username:    users[i].Username,
 			FirstName:   users[i].FirstName,
 			LastName:    users[i].LastName,
