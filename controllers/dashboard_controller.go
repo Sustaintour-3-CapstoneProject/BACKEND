@@ -14,6 +14,14 @@ type MonthlyUserCount struct {
 	Count int
 }
 
+// GetDashboardDataHandler godoc
+// @Summary Fetch dashboard data summary
+// @Description Retrieve a summary of users, destinations, video content, and destination categories for the dashboard
+// @Tags Dashboard
+// @Produce json
+// @Success 200 {object} map[string]interface{}
+// @Failure 500 {object} map[string]interface{}
+// @Router /dashboard/count-data [get]
 func GetDashboardDataHandler(c echo.Context) error {
 	var users []models.User
 	var destinations []models.Destination
@@ -46,6 +54,14 @@ func GetDashboardDataHandler(c echo.Context) error {
 	})
 }
 
+// GetDashboardGraphicDataHandler godoc
+// @Summary Fetch monthly user registration data
+// @Description Retrieve the number of user registrations grouped by month
+// @Tags Dashboard
+// @Produce json
+// @Success 200 {object} map[string]interface{}
+// @Failure 500 {object} map[string]interface{}
+// @Router /dashboard/graphic [get]
 func GetDashboardGraphicDataHandler(c echo.Context) error {
 	var userMonthlyCounts []MonthlyUserCount
 

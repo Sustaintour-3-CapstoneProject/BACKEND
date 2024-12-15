@@ -8,6 +8,18 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
+// FilterDestinations godoc
+// @Summary Filter destinations based on city and category
+// @Description Retrieve destinations filtered by city and/or category
+// @Tags Destinations
+// @Accept json
+// @Produce json
+// @Param city query string false "City to filter destinations by"
+// @Param category query array false "Categories to filter destinations by"
+// @Success 200 {object} map[string]interface{}
+// @Failure 400 {object} map[string]interface{}
+// @Failure 500 {object} map[string]interface{}
+// @Router /destinations [get]
 func FilterDestinations(c echo.Context) error {
 	// Mengambil query parameter 'city' untuk filter berdasarkan kota
 	city := c.QueryParam("city")

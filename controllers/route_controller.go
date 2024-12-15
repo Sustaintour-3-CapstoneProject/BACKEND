@@ -14,6 +14,17 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
+// CreateRoute godoc
+// @Summary Create a new travel route
+// @Description Create a new route by specifying the origin and destination cities, and additional route details
+// @Tags Routes
+// @Accept json
+// @Produce json
+// @Param input body request.CreateRouteInput true "Route details"
+// @Success 200 {object} models.Route
+// @Failure 400 {object} map[string]string "Invalid input"
+// @Failure 500 {object} map[string]string "Failed to create route"
+// @Router /route [post]
 func CreateRoute(c echo.Context) error {
 	// Decode JSON body
 	jsonBody := new(request.CreateRouteInput)
@@ -66,6 +77,17 @@ func calculateDistance(originCity models.City, destinationCity models.City) floa
 	return helper.Haversine(lat1, lon1, lat2, lon2)
 }
 
+// GetRouteByUser godoc
+// @Summary Get all routes by user
+// @Description Fetch all routes created by a specific user
+// @Tags Routes
+// @Accept json
+// @Produce json
+// @Param user_id query string true "User ID"
+// @Success 200 {object} map[string]interface{}
+// @Failure 401 {object} map[string]string "User not found"
+// @Failure 500 {object} map[string]string "Internal server error"
+// @Router /route [get]
 func GetRouteByUser(c echo.Context) error {
 	var routes []models.Route
 
@@ -121,6 +143,18 @@ func GetRouteByUser(c echo.Context) error {
 	})
 }
 
+// DeleteRoute godoc
+// @Summary Delete a specific route
+// @Description Delete a route by its ID, including all related destinations
+// @Tags Routes
+// @Accept json
+// @Produce json
+// @Param id path string true "Route ID"
+// @Success 200 {object} map[string]string "Route successfully deleted"
+// @Failure 400 {object} map[string]string "Invalid route ID"
+// @Failure 404 {object} map[string]string "Route not found"
+// @Failure 500 {object} map[string]string "Failed to delete route"
+// @Router /route/{id} [delete]
 func DeleteRoute(c echo.Context) error {
 	id := c.Param("id")
 	routeID, err := strconv.Atoi(id)
@@ -150,6 +184,18 @@ func DeleteRoute(c echo.Context) error {
 	return c.JSON(http.StatusOK, map[string]string{"message": "Route and related data successfully deleted"})
 }
 
+// GetDestinationsByRoute godoc
+// @Summary Get destinations for a specific route
+// @Description Fetch the destinations between two cities, based on the origin and destination city names
+// @Tags Routes
+// @Accept json
+// @Produce json
+// @Param origin query string true "Origin city name"
+// @Param destination query string true "Destination city name"
+// @Success 200 {object} map[string]interface{}
+// @Failure 400 {object} map[string]string "City not found"
+// @Failure 500 {object} map[string]string "Failed to fetch destinations"
+// @Router /destination [get]
 func GetDestinationsByRoute(c echo.Context) error {
 	originCityName := c.QueryParam("origin")
 	destinationCityName := c.QueryParam("destination")

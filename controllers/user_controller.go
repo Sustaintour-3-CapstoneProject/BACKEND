@@ -22,22 +22,18 @@ type LoginInput struct {
 	Password string `json:"password" validate:"required,min=6"`
 }
 
-// Struct untuk validasi input registrasi
-type RegisterInput struct {
-	Username  string `json:"username" validate:"required,alphanum"`
-	FirstName string `json:"first_name" validate:"required"`
-	LastName  string `json:"last_name" validate:"required"`
-	Email     string `json:"email" validate:"required,email"`
-	City      string `json:"city" validate:"required"`
-	Password  string `json:"password" validate:"required,min=6"`
-	Role      string `json:"role,omitempty" validate:"omitempty,oneof=admin user"`
-}
-
-type UserCategoryInput struct {
-	UserID   int      `json:"userID"`
-	Category []string `json:"category"`
-}
-
+// LoginHandler godoc
+// @Summary User login
+// @Description Handle user login by verifying username and password, and return a JWT token.
+// @Tags User
+// @Accept json
+// @Produce json
+// @Param input body LoginInput true "Login credentials"
+// @Success 200 {object} map[string]interface{}
+// @Failure 400 {object} map[string]interface{}
+// @Failure 401 {object} map[string]interface{}
+// @Failure 500 {object} map[string]interface{}
+// @Router /login [post]
 // LoginHandler menangani proses login
 func LoginHandler(c echo.Context) error {
 	var input LoginInput
@@ -101,6 +97,16 @@ func LoginHandler(c echo.Context) error {
 	return c.JSON(http.StatusOK, response)
 }
 
+// LogoutHandler godoc
+// @Summary Log out a user
+// @Description Process the logout request and return a success message
+// @Tags User
+// @Accept json
+// @Produce json
+// @Success 200 {object} map[string]interface{}
+// @Failure 400 {object} map[string]interface{}
+// @Failure 500 {object} map[string]interface{}
+// @Router /logout [get]
 func LogoutHandler(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, map[string]interface{}{
@@ -108,6 +114,28 @@ func LogoutHandler(c echo.Context) error {
 	})
 }
 
+// Struct untuk validasi input registrasi
+type RegisterInput struct {
+	Username  string `json:"username" validate:"required,alphanum"`
+	FirstName string `json:"first_name" validate:"required"`
+	LastName  string `json:"last_name" validate:"required"`
+	Email     string `json:"email" validate:"required,email"`
+	City      string `json:"city" validate:"required"`
+	Password  string `json:"password" validate:"required,min=6"`
+	Role      string `json:"role,omitempty" validate:"omitempty,oneof=admin user"`
+}
+
+// RegisterHandler godoc
+// @Summary User registration
+// @Description Handle user registration by validating input and creating a new user in the database.
+// @Tags User
+// @Accept json
+// @Produce json
+// @Param input body RegisterInput true "Registration details"
+// @Success 200 {object} map[string]interface{}
+// @Failure 400 {object} map[string]interface{}
+// @Failure 500 {object} map[string]interface{}
+// @Router /register [post]
 // RegisterHandler menangani proses registrasi
 func RegisterHandler(c echo.Context) error {
 
@@ -185,6 +213,22 @@ func RegisterHandler(c echo.Context) error {
 	return c.JSON(http.StatusOK, response)
 }
 
+type UserCategoryInput struct {
+	UserID   int      `json:"userID"`
+	Category []string `json:"category"`
+}
+
+// CreateUserCategoryHandler godoc
+// @Summary Create or update user categories
+// @Description Assign categories to a user by updating their profile.
+// @Tags User
+// @Accept json
+// @Produce json
+// @Param input body UserCategoryInput true "User categories"
+// @Success 200 {object} map[string]interface{}
+// @Failure 400 {object} map[string]interface{}
+// @Failure 500 {object} map[string]interface{}
+// @Router /user/category [post]
 func CreateUserCategoryHandler(c echo.Context) error {
 	var input UserCategoryInput
 
@@ -214,6 +258,16 @@ func CreateUserCategoryHandler(c echo.Context) error {
 	return c.JSON(http.StatusOK, response)
 }
 
+// GetAllUserHandler godoc
+// @Summary Get all users
+// @Description Retrieve a list of users, optionally filtered by name.
+// @Tags User
+// @Accept json
+// @Produce json
+// @Param name query string false "Search by first or last name"
+// @Success 200 {object} map[string]interface{}
+// @Failure 500 {object} map[string]interface{}
+// @Router /user/{id} [get]
 func GetAllUserHandler(c echo.Context) error {
 	err := godotenv.Load()
 	if err != nil {
@@ -265,6 +319,17 @@ func GetAllUserHandler(c echo.Context) error {
 	})
 }
 
+// GetDetailUserHandler godoc
+// @Summary Get user details
+// @Description Retrieve detailed information for a specific user by ID.
+// @Tags User
+// @Accept json
+// @Produce json
+// @Param id path int true "User ID"
+// @Success 200 {object} map[string]interface{}
+// @Failure 404 {object} map[string]interface{}
+// @Failure 500 {object} map[string]interface{}
+// @Router /user/{id} [get]
 func GetDetailUserHandler(c echo.Context) error {
 	var user models.User
 
@@ -299,6 +364,28 @@ func GetDetailUserHandler(c echo.Context) error {
 	})
 }
 
+// EditUserHandler godoc
+// @Summary Edit user profile
+// @Description Update user information such as username, email, password, and categories.
+// @Tags User
+// @Accept multipart/form-data
+// @Produce json
+// @Param id path int true "User ID"
+// @Param username formData string false "Username"
+// @Param first_name formData string false "First Name"
+// @Param last_name formData string false "Last Name"
+// @Param email formData string false "Email"
+// @Param city formData string false "City"
+// @Param password formData string false "Password"
+// @Param role formData string false "Role"
+// @Param phone_number formData string false "Phone Number"
+// @Param gender formData string false "Gender"
+// @Param file formData file false "Profile Image"
+// @Success 200 {object} map[string]interface{}
+// @Failure 400 {object} map[string]interface{}
+// @Failure 404 {object} map[string]interface{}
+// @Failure 500 {object} map[string]interface{}
+// @Router /users/{id} [put]
 func EditUserHandler(c echo.Context) error {
 	// Get user ID from the request (e.g., from URL parameter or JWT claims)
 	id := c.Param("id")

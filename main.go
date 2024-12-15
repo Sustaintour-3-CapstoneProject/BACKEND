@@ -2,14 +2,36 @@ package main
 
 import (
 	"backend/config"
+	_ "backend/docs"
 	"backend/routes"
 	"log"
 	"os"
+
+	echoSwagger "github.com/swaggo/echo-swagger"
 
 	"github.com/joho/godotenv"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 )
+
+// @title           TRIPWISE API
+// @version         1.0
+// @description     API Documentation TripWise Capstone Project - Team 3
+// @termsOfService  http://swagger.io/terms/
+
+// @contact.name   API Support
+// @contact.url    http://www.swagger.io/support
+// @contact.email  support@swagger.io
+
+// @license.name  Apache 2.0
+// @license.url   http://www.apache.org/licenses/LICENSE-2.0.html
+
+// @host      www.tripwise.my.id
+
+// @securityDefinitions.basic  BasicAuth
+
+// @externalDocs.description  OpenAPI
+// @externalDocs.url          https://swagger.io/resources/open-api/
 
 func main() {
 	e := echo.New()
@@ -18,6 +40,8 @@ func main() {
 	config.InitDB()
 
 	os.Mkdir("assets", 0777)
+
+	e.GET("/swagger/*", echoSwagger.WrapHandler)
 
 	// Apply CORS middleware with custom config
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
@@ -42,4 +66,5 @@ func main() {
 	}
 
 	e.Logger.Fatal(e.Start(":" + os.Getenv("APP_PORT")))
+
 }

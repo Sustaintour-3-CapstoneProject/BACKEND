@@ -9,11 +9,24 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
+type CityInput struct {
+	Name string `json:"name"`
+}
+
+// CreateCity godoc
+// @Summary Create a new city
+// @Description Create a new city in the database
+// @Tags Cities
+// @Accept  json
+// @Produce  json
+// @Param   city  body     CityInput  true  "City Name"
+// @Success 200    {object} map[string]interface{}
+// @Failure 400    {object} map[string]interface{}
+// @Failure 409    {object} map[string]interface{}
+// @Failure 500    {object} map[string]interface{}
+// @Router /city [post]
 func CreateCity(c echo.Context) error {
 	// Deklarasi struct input
-	type CityInput struct {
-		Name string `json:"name"`
-	}
 
 	// Decode body request
 	var input CityInput
@@ -44,6 +57,15 @@ func CreateCity(c echo.Context) error {
 	})
 }
 
+// GetCity godoc
+// @Summary Get all cities
+// @Description Retrieve a list of all cities from the database
+// @Tags Cities
+// @Accept  json
+// @Produce  json
+// @Success 200 {object} map[string]interface{}()
+// @Failure 500 {object} map[string]interface{}()
+// @Router /city [get]
 func GetCity(c echo.Context) error {
 	// Mendapatkan semua data kota dari database
 	var cities []models.City

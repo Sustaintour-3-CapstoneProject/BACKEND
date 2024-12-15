@@ -1,0 +1,1081 @@
+definitions:
+  controllers.CityInput:
+    properties:
+      name:
+        type: string
+    type: object
+  controllers.CreateDestinationAssetsInput:
+    properties:
+      destinationID:
+        type: integer
+      images:
+        items:
+          type: string
+        type: array
+      video_contents:
+        items:
+          $ref: '#/definitions/request.VideoInput'
+        type: array
+    type: object
+  controllers.Input:
+    properties:
+      message:
+        type: string
+    type: object
+  controllers.LoginInput:
+    properties:
+      password:
+        minLength: 6
+        type: string
+      username:
+        type: string
+    required:
+    - password
+    - username
+    type: object
+  controllers.RegisterInput:
+    properties:
+      city:
+        type: string
+      email:
+        type: string
+      first_name:
+        type: string
+      last_name:
+        type: string
+      password:
+        minLength: 6
+        type: string
+      role:
+        enum:
+        - admin
+        - user
+        type: string
+      username:
+        type: string
+    required:
+    - city
+    - email
+    - first_name
+    - last_name
+    - password
+    - username
+    type: object
+  controllers.UserCategoryInput:
+    properties:
+      category:
+        items:
+          type: string
+        type: array
+      userID:
+        type: integer
+    type: object
+  models.City:
+    properties:
+      id:
+        type: integer
+      lat:
+        type: string
+      long:
+        type: string
+      name:
+        type: string
+    type: object
+  models.Destination:
+    properties:
+      address:
+        type: string
+      category:
+        type: string
+      city:
+        $ref: '#/definitions/models.City'
+      city_id:
+        type: integer
+      created_at:
+        type: string
+      description:
+        type: string
+      facilities:
+        type: string
+      id:
+        type: integer
+      images:
+        items:
+          $ref: '#/definitions/models.Image'
+        type: array
+      name:
+        type: string
+      operational_hours:
+        type: string
+      position:
+        type: number
+      ticket_price:
+        type: number
+      video_contents:
+        items:
+          $ref: '#/definitions/models.VideoContent'
+        type: array
+    type: object
+  models.Image:
+    properties:
+      destination_id:
+        type: integer
+      id:
+        type: integer
+      url:
+        type: string
+    type: object
+  models.Route:
+    properties:
+      cost:
+        type: integer
+      created_at:
+        type: string
+      destinationCityName:
+        type: string
+      destinations:
+        items:
+          $ref: '#/definitions/models.RouteDestination'
+        type: array
+      distance:
+        type: number
+      id:
+        type: integer
+      originCityName:
+        type: string
+      time:
+        type: string
+      userID:
+        type: integer
+    type: object
+  models.RouteDestination:
+    properties:
+      created_at:
+        type: string
+      destinationID:
+        type: integer
+      id:
+        type: integer
+      routeID:
+        type: integer
+    type: object
+  models.VideoContent:
+    properties:
+      description:
+        type: string
+      destination_id:
+        type: integer
+      id:
+        type: integer
+      title:
+        type: string
+      url:
+        type: string
+    type: object
+  request.CreateDestinationInput:
+    properties:
+      address:
+        type: string
+      category:
+        type: string
+      city:
+        type: string
+      description:
+        type: string
+      facilities:
+        type: string
+      image:
+        items:
+          type: string
+        type: array
+      name:
+        type: string
+      operational_hours:
+        type: string
+      position:
+        type: number
+      ticket_price:
+        type: number
+      video_contents:
+        items:
+          $ref: '#/definitions/request.VideoInput'
+        type: array
+    type: object
+  request.CreateRouteInput:
+    properties:
+      cost:
+        type: integer
+      destinationCityName:
+        type: string
+      destinations:
+        items:
+          type: integer
+        type: array
+      distance:
+        type: number
+      originCityName:
+        type: string
+      time:
+        type: string
+      userID:
+        type: integer
+    type: object
+  request.VideoInput:
+    properties:
+      description:
+        type: string
+      title:
+        type: string
+      url:
+        type: string
+    type: object
+externalDocs:
+  description: OpenAPI
+  url: https://swagger.io/resources/open-api/
+host: www.tripwise.my.id
+info:
+  contact:
+    email: support@swagger.io
+    name: API Support
+    url: http://www.swagger.io/support
+  description: API Documentation TripWise Capstone Project - Team 3
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms/
+  title: TRIPWISE API
+  version: "1.0"
+paths:
+  /chat:
+    post:
+      consumes:
+      - application/json
+      description: Process a chat message and get a response from Gemini API
+      parameters:
+      - description: Chat Message
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/controllers.Input'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Send a chat message to Gemini API
+      tags:
+      - Chat
+  /city:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a list of all cities from the database
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get all cities
+      tags:
+      - Cities
+    post:
+      consumes:
+      - application/json
+      description: Create a new city in the database
+      parameters:
+      - description: City Name
+        in: body
+        name: city
+        required: true
+        schema:
+          $ref: '#/definitions/controllers.CityInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "409":
+          description: Conflict
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Create a new city
+      tags:
+      - Cities
+  /dashboard/count-data:
+    get:
+      description: Retrieve a summary of users, destinations, video content, and destination
+        categories for the dashboard
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Fetch dashboard data summary
+      tags:
+      - Dashboard
+  /dashboard/graphic:
+    get:
+      description: Retrieve the number of user registrations grouped by month
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Fetch monthly user registration data
+      tags:
+      - Dashboard
+  /destination:
+    get:
+      consumes:
+      - application/json
+      description: Fetch the destinations between two cities, based on the origin
+        and destination city names
+      parameters:
+      - description: Origin city name
+        in: query
+        name: origin
+        required: true
+        type: string
+      - description: Destination city name
+        in: query
+        name: destination
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: City not found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Failed to fetch destinations
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get destinations for a specific route
+      tags:
+      - Routes
+    post:
+      consumes:
+      - application/json
+      description: Create a new destination and associate it with a city, images,
+        and video contents
+      parameters:
+      - description: Destination Input
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/request.CreateDestinationInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Destination'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Create a new destination
+      tags:
+      - Destinations
+  /destinations:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve destinations filtered by city and/or category
+      parameters:
+      - description: City to filter destinations by
+        in: query
+        name: city
+        type: string
+      - description: Categories to filter destinations by
+        in: query
+        name: category
+        type: array
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Filter destinations based on city and category
+      tags:
+      - Destinations
+  /destinations/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete a destination and its associated images and video contents
+      parameters:
+      - description: Destination ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Delete a destination
+      tags:
+      - Destinations
+    get:
+      consumes:
+      - application/json
+      description: Fetch detailed information of a destination including city, images,
+        and video contents
+      parameters:
+      - description: Destination ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get destination details
+      tags:
+      - Destinations
+    put:
+      consumes:
+      - application/json
+      description: Update destination details including city, images, and video contents
+      parameters:
+      - description: Destination ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Updated Destination Input
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/request.CreateDestinationInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Update a destination
+      tags:
+      - Destinations
+  /destinations/assets:
+    post:
+      consumes:
+      - application/json
+      description: Upload images and videos to a destination
+      parameters:
+      - description: Create Destination Assets
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/controllers.CreateDestinationAssetsInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Create assets (images and videos) for a destination
+      tags:
+      - Destinations
+  /destinations/most-viewed-videos:
+    get:
+      consumes:
+      - application/json
+      description: Fetch destinations ranked by the number of video views
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get most viewed video content
+      tags:
+      - Destinations
+  /destinations/personalized:
+    get:
+      consumes:
+      - application/json
+      description: Fetch destinations based on the user's preferences and categories
+      parameters:
+      - description: User ID
+        in: query
+        name: user_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get personalized destinations for a user
+      tags:
+      - Destinations
+  /login:
+    post:
+      consumes:
+      - application/json
+      description: Handle user login by verifying username and password, and return
+        a JWT token.
+      parameters:
+      - description: Login credentials
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/controllers.LoginInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: User login
+      tags:
+      - User
+  /logout:
+    get:
+      consumes:
+      - application/json
+      description: Process the logout request and return a success message
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Log out a user
+      tags:
+      - User
+  /register:
+    post:
+      consumes:
+      - application/json
+      description: Handle user registration by validating input and creating a new
+        user in the database.
+      parameters:
+      - description: Registration details
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/controllers.RegisterInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: User registration
+      tags:
+      - User
+  /route:
+    get:
+      consumes:
+      - application/json
+      description: Fetch all routes created by a specific user
+      parameters:
+      - description: User ID
+        in: query
+        name: user_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: User not found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get all routes by user
+      tags:
+      - Routes
+    post:
+      consumes:
+      - application/json
+      description: Create a new route by specifying the origin and destination cities,
+        and additional route details
+      parameters:
+      - description: Route details
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/request.CreateRouteInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Route'
+        "400":
+          description: Invalid input
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Failed to create route
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Create a new travel route
+      tags:
+      - Routes
+  /route/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete a route by its ID, including all related destinations
+      parameters:
+      - description: Route ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Route successfully deleted
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Invalid route ID
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Route not found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Failed to delete route
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Delete a specific route
+      tags:
+      - Routes
+  /user/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve detailed information for a specific user by ID.
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get user details
+      tags:
+      - User
+  /user/category:
+    post:
+      consumes:
+      - application/json
+      description: Assign categories to a user by updating their profile.
+      parameters:
+      - description: User categories
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/controllers.UserCategoryInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Create or update user categories
+      tags:
+      - User
+  /users/{id}:
+    put:
+      consumes:
+      - multipart/form-data
+      description: Update user information such as username, email, password, and
+        categories.
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Username
+        in: formData
+        name: username
+        type: string
+      - description: First Name
+        in: formData
+        name: first_name
+        type: string
+      - description: Last Name
+        in: formData
+        name: last_name
+        type: string
+      - description: Email
+        in: formData
+        name: email
+        type: string
+      - description: City
+        in: formData
+        name: city
+        type: string
+      - description: Password
+        in: formData
+        name: password
+        type: string
+      - description: Role
+        in: formData
+        name: role
+        type: string
+      - description: Phone Number
+        in: formData
+        name: phone_number
+        type: string
+      - description: Gender
+        in: formData
+        name: gender
+        type: string
+      - description: Profile Image
+        in: formData
+        name: file
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Edit user profile
+      tags:
+      - User
+  /videos:
+    get:
+      consumes:
+      - application/json
+      description: Fetch all video contents stored in the system
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get all video contents
+      tags:
+      - Video
+securityDefinitions:
+  BasicAuth:
+    type: basic
+swagger: "2.0"

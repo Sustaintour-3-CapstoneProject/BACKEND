@@ -21,6 +21,17 @@ type CreateDestinationAssetsInput struct {
 	VideoContents []request.VideoInput `json:"video_contents"`
 }
 
+// CreateDestination godoc
+// @Summary Create a new destination
+// @Description Create a new destination and associate it with a city, images, and video contents
+// @Tags Destinations
+// @Accept json
+// @Produce json
+// @Param input body request.CreateDestinationInput true "Destination Input"
+// @Success 200 {object} models.Destination
+// @Failure 400 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /destination [post]
 func CreateDestination(c echo.Context) error {
 	// Decode JSON body
 	jsonBody := new(request.CreateDestinationInput)
@@ -82,6 +93,19 @@ func CreateDestination(c echo.Context) error {
 	return c.JSON(http.StatusOK, destination)
 }
 
+// UpdateDestination godoc
+// @Summary Update a destination
+// @Description Update destination details including city, images, and video contents
+// @Tags Destinations
+// @Accept json
+// @Produce json
+// @Param id path int true "Destination ID"
+// @Param input body request.CreateDestinationInput true "Updated Destination Input"
+// @Success 200 {object} map[string]string
+// @Failure 400 {object} map[string]string
+// @Failure 404 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /destinations/{id} [put]
 func UpdateDestination(c echo.Context) error {
 	// Ambil ID destinasi dari parameter URL
 	id := c.Param("id")
@@ -150,6 +174,18 @@ func UpdateDestination(c echo.Context) error {
 	return c.JSON(http.StatusOK, map[string]string{"message": "Destinasi berhasil diperbarui"})
 }
 
+// DeleteDestination godoc
+// @Summary Delete a destination
+// @Description Delete a destination and its associated images and video contents
+// @Tags Destinations
+// @Accept json
+// @Produce json
+// @Param id path int true "Destination ID"
+// @Success 200 {object} map[string]string
+// @Failure 400 {object} map[string]string
+// @Failure 404 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /destinations/{id} [delete]
 // Fungsi untuk menghapus destinasi berdasarkan ID
 func DeleteDestination(c echo.Context) error {
 	// Retrieve the destination ID from the URL parameter
@@ -192,6 +228,19 @@ func DeleteDestination(c echo.Context) error {
 	return c.JSON(http.StatusOK, map[string]string{"message": "Destination and related data successfully deleted"})
 }
 
+// GetAllDestinations godoc
+// @Summary Get all destinations
+// @Description Fetch a list of destinations with filters like name, city, category, and sort order
+// @Tags Destinations
+// @Accept json
+// @Produce json
+// @Param name query string false "Filter by destination name"
+// @Param city query string false "Filter by city name"
+// @Param category query string false "Filter by category"
+// @Param sort query string false "Sort order (newest, oldest)"
+// @Success 200 {object} map[string]interface{}
+// @Failure 500 {object} map[string]string
+// @Router /destinations [get]
 func GetAllDestinations(c echo.Context) error {
 	var destinations []models.Destination
 	var destinationResponses []response.DestinationResponse
@@ -270,6 +319,17 @@ func GetAllDestinations(c echo.Context) error {
 	})
 }
 
+// GetDetailDestination godoc
+// @Summary Get destination details
+// @Description Fetch detailed information of a destination including city, images, and video contents
+// @Tags Destinations
+// @Accept json
+// @Produce json
+// @Param id path int true "Destination ID"
+// @Success 200 {object} map[string]interface{}
+// @Failure 404 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /destinations/{id} [get]
 func GetDetailDestination(c echo.Context) error {
 	var destination models.Destination
 	var destinationResponse response.DestinationResponse
@@ -324,6 +384,15 @@ func GetDetailDestination(c echo.Context) error {
 	})
 }
 
+// GetMostViewedVideoContent godoc
+// @Summary Get most viewed video content
+// @Description Fetch destinations ranked by the number of video views
+// @Tags Destinations
+// @Accept json
+// @Produce json
+// @Success 200 {object} map[string]interface{}
+// @Failure 500 {object} map[string]string
+// @Router /destinations/most-viewed-videos [get]
 func GetMostViewedVideoContent(c echo.Context) error {
 	var results []struct {
 		ID          uint   `json:"id"`
@@ -392,6 +461,18 @@ func convertVideosToResponse(videos []models.VideoContent) []response.VideoConte
 	return videoResponses
 }
 
+// GetPersonalizedDestinationByUser godoc
+// @Summary Get personalized destinations for a user
+// @Description Fetch destinations based on the user's preferences and categories
+// @Tags Destinations
+// @Accept json
+// @Produce json
+// @Param user_id query string true "User ID"
+// @Success 200 {object} map[string]interface{}
+// @Failure 400 {object} map[string]interface{}
+// @Failure 401 {object} map[string]interface{}
+// @Failure 500 {object} map[string]interface{}
+// @Router /destinations/personalized [get]
 func GetPersonalizedDestinationByUser(c echo.Context) error {
 	var destinations []models.Destination
 	var destinationResponses []response.DestinationResponse
@@ -455,6 +536,18 @@ func GetPersonalizedDestinationByUser(c echo.Context) error {
 	})
 }
 
+// CreateDestinationAssetsHandler godoc
+// @Summary Create assets (images and videos) for a destination
+// @Description Upload images and videos to a destination
+// @Tags Destinations
+// @Accept json
+// @Produce json
+// @Param input body CreateDestinationAssetsInput true "Create Destination Assets"
+// @Success 200 {object} map[string]interface{}
+// @Failure 400 {object} map[string]interface{}
+// @Failure 401 {object} map[string]interface{}
+// @Failure 500 {object} map[string]interface{}
+// @Router /destinations/assets [post]
 func CreateDestinationAssetsHandler(c echo.Context) error {
 	var input CreateDestinationAssetsInput
 
@@ -496,6 +589,15 @@ func CreateDestinationAssetsHandler(c echo.Context) error {
 	return c.JSON(http.StatusOK, response)
 }
 
+// GetAllVideoContents godoc
+// @Summary Get all video contents
+// @Description Fetch all video contents stored in the system
+// @Tags Video
+// @Accept json
+// @Produce json
+// @Success 200 {object} map[string]interface{}
+// @Failure 500 {object} map[string]interface{}
+// @Router /videos [get]
 func GetAllVideoContents(c echo.Context) error {
 	var videos []models.VideoContent
 
