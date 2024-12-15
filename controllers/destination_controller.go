@@ -15,6 +15,12 @@ import (
 	"gorm.io/gorm"
 )
 
+type CreateDestinationAssetsInput struct {
+	DestinationID int                  `json:"destinationID"`
+	Images        []string             `json:"images"`
+	VideoContents []request.VideoInput `json:"video_contents"`
+}
+
 func CreateDestination(c echo.Context) error {
 	// Decode JSON body
 	jsonBody := new(request.CreateDestinationInput)
@@ -116,6 +122,30 @@ func UpdateDestination(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Gagal memperbarui destinasi"})
 	}
 
+	config.DB.Where("destination_id = ?", destination.ID).Delete(&destination.Images)
+	config.DB.Where("destination_id = ?", destination.ID).Delete(&destination.VideoContents)
+
+	for i := 0; i < len(jsonBody.Image); i++ {
+		image := new(models.Image)
+		image.DestinationID = destination.ID
+		image.URL = jsonBody.Image[i]
+		if err := config.DB.Create(image).Error; err != nil {
+			return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Failed to add image"})
+		}
+	}
+
+	//video
+	for i := 0; i < len(jsonBody.Video); i++ {
+		video := new(models.VideoContent)
+		video.DestinationID = destination.ID
+		video.URL = jsonBody.Video[i].Url
+		video.Title = jsonBody.Video[i].Title
+		video.Description = jsonBody.Video[i].Description
+		if err := config.DB.Create(video).Error; err != nil {
+			return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Failed to add image"})
+		}
+	}
+
 	// Kembalikan respons berhasil
 	return c.JSON(http.StatusOK, map[string]string{"message": "Destinasi berhasil diperbarui"})
 }
@@ -139,13 +169,13 @@ func DeleteDestination(c echo.Context) error {
 	tx := config.DB.Begin()
 
 	// Delete related Images
-	if err := tx.Delete(&destination.Images).Error; err != nil {
+	if err := tx.Where("destination_id = ?", destination.ID).Delete(&destination.Images).Error; err != nil {
 		tx.Rollback()
 		return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Failed to delete related images"})
 	}
 
 	// Delete related VideoContents
-	if err := tx.Delete(&destination.VideoContents).Error; err != nil {
+	if err := tx.Where("destination_id = ?", destination.ID).Delete(&destination.VideoContents).Error; err != nil {
 		tx.Rollback()
 		return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Failed to delete related video contents"})
 	}
@@ -167,7 +197,7 @@ func GetAllDestinations(c echo.Context) error {
 	var destinationResponses []response.DestinationResponse
 
 	queryName := c.QueryParam("name")
-	queryCityID := c.QueryParam("city")
+	queryCityName := c.QueryParam("city")
 	querySort := c.QueryParam("sort")
 	queryCategory := c.QueryParam("category")
 
@@ -180,8 +210,12 @@ func GetAllDestinations(c echo.Context) error {
 		query = query.Where("name LIKE ?", "%"+queryName+"%")
 	}
 
-	if queryCityID != "" {
-		query = query.Where("city_id = ?", queryCityID)
+	if queryCityName != "" {
+		var city models.City
+		if err := config.DB.Where("name = ?", queryCityName).First(&city).Error; err != nil {
+			return c.JSON(http.StatusBadRequest, map[string]string{"message": "Origin City not found"})
+		}
+		query = query.Where("city_id = ?", city.ID)
 	}
 
 	if queryCategory != "" {
@@ -418,5 +452,60 @@ func GetPersonalizedDestinationByUser(c echo.Context) error {
 	return c.JSON(http.StatusOK, map[string]interface{}{
 		"message": "Destinations fetched successfully",
 		"data":    destinationResponses,
+	})
+}
+
+func CreateDestinationAssetsHandler(c echo.Context) error {
+	var input CreateDestinationAssetsInput
+
+	// Bind input
+	if err := c.Bind(&input); err != nil {
+		response := helper.APIResponse("Invalid request", http.StatusBadRequest, "error", nil)
+		return c.JSON(http.StatusBadRequest, response)
+	}
+
+	var destination models.Destination
+	result := config.DB.First(&destination, "id = ?", input.DestinationID)
+	if result.Error != nil || destination.ID == 0 {
+		response := helper.APIResponse("Destination not found", http.StatusUnauthorized, "error", nil)
+		return c.JSON(http.StatusUnauthorized, response)
+	}
+
+	for i := 0; i < len(input.Images); i++ {
+		image := new(models.Image)
+		image.DestinationID = destination.ID
+		image.URL = input.Images[i]
+		if err := config.DB.Create(image).Error; err != nil {
+			return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Failed to add image"})
+		}
+	}
+
+	//video
+	for i := 0; i < len(input.VideoContents); i++ {
+		video := new(models.VideoContent)
+		video.DestinationID = destination.ID
+		video.URL = input.VideoContents[i].Url
+		video.Title = input.VideoContents[i].Title
+		video.Description = input.VideoContents[i].Description
+		if err := config.DB.Create(video).Error; err != nil {
+			return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Failed to add image"})
+		}
+	}
+
+	response := helper.APIResponse("Create Destination Assets success", http.StatusOK, "success", destination)
+	return c.JSON(http.StatusOK, response)
+}
+
+func GetAllVideoContents(c echo.Context) error {
+	var videos []models.VideoContent
+
+	err := config.DB.Find(&videos).Error
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Failed to fetch videos"})
+	}
+
+	return c.JSON(http.StatusOK, map[string]interface{}{
+		"message": "Video Contents fetched successfully",
+		"videos":  convertVideosToResponse(videos),
 	})
 }
