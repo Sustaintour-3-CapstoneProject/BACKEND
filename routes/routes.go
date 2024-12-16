@@ -15,6 +15,7 @@ func InitRoutes(e *echo.Echo) {
 	userGroup.GET("", controllers.GetAllUserHandler)
 	userGroup.POST("/category", controllers.CreateUserCategoryHandler)
 	userGroup.GET("/:id", controllers.GetDetailUserHandler)
+	userGroup.PUT("/change-password/:id", controllers.ChangePasswordHandler)
 	userGroup.PUT("/:id", controllers.EditUserHandler)
 	userGroup.DELETE("/:id", controllers.DeleteUser)
 
@@ -31,8 +32,6 @@ func InitRoutes(e *echo.Echo) {
 	destinationVideoContentGroup.GET("", controllers.GetAllVideoContents)
 	destinationVideoContentGroup.GET("/most", controllers.GetMostViewedVideoContent)
 
-	e.GET("/destinations", controllers.FilterDestinations)
-
 	e.POST("/city", controllers.CreateCity)
 	e.GET("/city", controllers.GetCity)
 
@@ -40,6 +39,7 @@ func InitRoutes(e *echo.Echo) {
 
 	destinationGroup.POST("", controllers.CreateDestination, middlewares.AdminOnly)
 	destinationGroup.POST("/assets", controllers.CreateDestinationAssetsHandler, middlewares.AdminOnly)
+	destinationGroup.PUT("/assets", controllers.UpdateDestinationAssetsHandler)
 	destinationGroup.PUT("/:id", controllers.UpdateDestination, middlewares.AdminOnly)
 	destinationGroup.DELETE("/:id", controllers.DeleteDestination, middlewares.AdminOnly)
 

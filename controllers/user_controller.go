@@ -22,6 +22,11 @@ type LoginInput struct {
 	Password string `json:"password" validate:"required,min=6"`
 }
 
+type ChangePasswordInput struct {
+	CurrentPassword string `json:"currentPassword" validate:"required,min=6"`
+	NewPassword     string `json:"newPassword" validate:"required,min=6"`
+}
+
 // LoginHandler godoc
 // @Summary User login
 // @Description Handle user login by verifying username and password, and return a JWT token.
@@ -524,6 +529,60 @@ func DeleteUser(c echo.Context) error {
 	tx := config.DB.Begin()
 
 	if err := tx.Delete(&user).Error; err != nil {
+		tx.Rollback()
+		return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Failed to delete user"})
+	}
+
+	tx.Commit()
+
+	return c.JSON(http.StatusOK, map[string]string{"message": "User successfully deleted"})
+}
+
+func ChangePasswordHandler(c echo.Context) error {
+	id := c.Param("id")
+
+	userID, err := strconv.Atoi(id)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"message": "Invalid user ID"})
+	}
+
+	var user models.User
+	if err := config.DB.First(&user, userID).Error; err != nil {
+		return c.JSON(http.StatusNotFound, map[string]string{"message": "User not found"})
+	}
+
+	var input ChangePasswordInput
+
+	// Bind input
+	if err := c.Bind(&input); err != nil {
+		response := helper.APIResponse("Invalid request", http.StatusBadRequest, "error", nil)
+		return c.JSON(http.StatusBadRequest, response)
+	}
+
+	// Validasi input
+	if err := helper.ValidateInput(&input); err != nil {
+		errors := helper.FormatValidationError(err)
+		response := helper.APIResponse("Validation error", http.StatusBadRequest, "error", errors)
+		return c.JSON(http.StatusBadRequest, response)
+	}
+
+	// Cek password
+	if !helper.CheckPasswordHash(input.CurrentPassword, user.Password) {
+		response := helper.APIResponse("Incorrect password", http.StatusUnauthorized, "error", nil)
+		return c.JSON(http.StatusUnauthorized, response)
+	}
+
+	hashedPassword, err := helper.HashPassword(input.NewPassword)
+	if err != nil {
+		response := helper.APIResponse("Failed to hash password", http.StatusInternalServerError, "error", nil)
+		return c.JSON(http.StatusInternalServerError, response)
+	}
+
+	tx := config.DB.Begin()
+
+	user.Password = hashedPassword
+
+	if err := tx.Save(&user).Error; err != nil {
 		tx.Rollback()
 		return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Failed to delete user"})
 	}

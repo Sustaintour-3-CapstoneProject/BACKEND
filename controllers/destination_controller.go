@@ -611,3 +611,61 @@ func GetAllVideoContents(c echo.Context) error {
 		"videos":  convertVideosToResponse(videos),
 	})
 }
+
+func UpdateDestinationAssetsHandler(c echo.Context) error {
+	var input CreateDestinationAssetsInput
+
+	// Bind input
+	if err := c.Bind(&input); err != nil {
+		response := helper.APIResponse("Invalid request", http.StatusBadRequest, "error", nil)
+		return c.JSON(http.StatusBadRequest, response)
+	}
+
+	var destination models.Destination
+	result := config.DB.First(&destination, "id = ?", input.DestinationID)
+	if result.Error != nil || destination.ID == 0 {
+		response := helper.APIResponse("Destination not found", http.StatusUnauthorized, "error", nil)
+		return c.JSON(http.StatusUnauthorized, response)
+	}
+
+	// Start a transaction to ensure atomicity
+	tx := config.DB.Begin()
+
+	// Delete related Images
+	if err := tx.Where("destination_id = ?", destination.ID).Delete(&destination.Images).Error; err != nil {
+		tx.Rollback()
+		return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Failed to delete related images"})
+	}
+
+	// Delete related VideoContents
+	if err := tx.Where("destination_id = ?", destination.ID).Delete(&destination.VideoContents).Error; err != nil {
+		tx.Rollback()
+		return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Failed to delete related video contents"})
+	}
+
+	tx.Commit()
+
+	for i := 0; i < len(input.Images); i++ {
+		image := new(models.Image)
+		image.DestinationID = destination.ID
+		image.URL = input.Images[i]
+		if err := config.DB.Create(image).Error; err != nil {
+			return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Failed to add image"})
+		}
+	}
+
+	//video
+	for i := 0; i < len(input.VideoContents); i++ {
+		video := new(models.VideoContent)
+		video.DestinationID = destination.ID
+		video.URL = input.VideoContents[i].Url
+		video.Title = input.VideoContents[i].Title
+		video.Description = input.VideoContents[i].Description
+		if err := config.DB.Create(video).Error; err != nil {
+			return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Failed to add image"})
+		}
+	}
+
+	response := helper.APIResponse("Create Destination Assets success", http.StatusOK, "success", destination)
+	return c.JSON(http.StatusOK, response)
+}
