@@ -14,13 +14,27 @@ import (
 var DB *gorm.DB
 
 func InitDB() {
-	// Load environment variables
+	// Load the appropriate .env file
 	err := godotenv.Load()
 	if err != nil {
 		log.Fatal("Error loading .env file")
 	}
 
-	// Get database credentials from .env
+	connectDatabase()
+}
+
+func TestInitDB() {
+	// Load the test-specific .env file
+	err := godotenv.Load(".env.test")
+	if err != nil {
+		log.Fatal("Error loading .env.test file")
+	}
+
+	connectDatabase()
+}
+
+func connectDatabase() {
+	// Get database credentials from environment variables
 	dbUser := os.Getenv("DB_USER")
 	dbPassword := os.Getenv("DB_PASSWORD")
 	dbHost := os.Getenv("DB_HOST")
@@ -31,12 +45,14 @@ func InitDB() {
 	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8mb4&parseTime=True&loc=Local",
 		dbUser, dbPassword, dbHost, dbPort, dbName)
 
-	// Connect to database
+	// Connect to the database
+	var err error
 	DB, err = gorm.Open(mysql.Open(dsn), &gorm.Config{})
 	if err != nil {
 		log.Fatal("Failed to connect to database:", err)
 	}
 
+	// AutoMigrate models
 	DB.AutoMigrate(
 		&models.User{},
 		&models.Destination{},
@@ -47,5 +63,4 @@ func InitDB() {
 		&models.Route{},
 		&models.RouteDestination{},
 	)
-
 }
