@@ -1,4 +1,16 @@
 definitions:
+  controllers.ChangePasswordInput:
+    properties:
+      currentPassword:
+        minLength: 6
+        type: string
+      newPassword:
+        minLength: 6
+        type: string
+    required:
+    - currentPassword
+    - newPassword
+    type: object
   controllers.CityInput:
     properties:
       name:
@@ -454,16 +466,25 @@ paths:
     get:
       consumes:
       - application/json
-      description: Retrieve destinations filtered by city and/or category
+      description: Fetch a list of destinations with filters like name, city, category,
+        and sort order
       parameters:
-      - description: City to filter destinations by
+      - description: Filter by destination name
+        in: query
+        name: name
+        type: string
+      - description: Filter by city name
         in: query
         name: city
         type: string
-      - description: Categories to filter destinations by
+      - description: Filter by category
         in: query
         name: category
-        type: array
+        type: string
+      - description: Sort order (newest, oldest)
+        in: query
+        name: sort
+        type: string
       produces:
       - application/json
       responses:
@@ -472,17 +493,13 @@ paths:
           schema:
             additionalProperties: true
             type: object
-        "400":
-          description: Bad Request
-          schema:
-            additionalProperties: true
-            type: object
         "500":
           description: Internal Server Error
           schema:
-            additionalProperties: true
+            additionalProperties:
+              type: string
             type: object
-      summary: Filter destinations based on city and category
+      summary: Get all destinations
       tags:
       - Destinations
   /destinations/{id}:
@@ -1052,6 +1069,58 @@ paths:
             additionalProperties: true
             type: object
       summary: Edit user profile
+      tags:
+      - User
+  /users/change-password/{id}:
+    put:
+      consumes:
+      - application/json
+      description: Allows a user to change their password by providing the current
+        password and a new password.
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Change Password Payload
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/controllers.ChangePasswordInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User successfully updated
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized - Incorrect Password
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: User Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Change user password
       tags:
       - User
   /videos:

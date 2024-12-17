@@ -324,7 +324,7 @@ const docTemplate = `{
         },
         "/destinations": {
             "get": {
-                "description": "Retrieve destinations filtered by city and/or category",
+                "description": "Fetch a list of destinations with filters like name, city, category, and sort order",
                 "consumes": [
                     "application/json"
                 ],
@@ -334,18 +334,30 @@ const docTemplate = `{
                 "tags": [
                     "Destinations"
                 ],
-                "summary": "Filter destinations based on city and category",
+                "summary": "Get all destinations",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "City to filter destinations by",
+                        "description": "Filter by destination name",
+                        "name": "name",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by city name",
                         "name": "city",
                         "in": "query"
                     },
                     {
-                        "type": "array",
-                        "description": "Categories to filter destinations by",
+                        "type": "string",
+                        "description": "Filter by category",
                         "name": "category",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Sort order (newest, oldest)",
+                        "name": "sort",
                         "in": "query"
                     }
                 ],
@@ -357,18 +369,13 @@ const docTemplate = `{
                             "additionalProperties": true
                         }
                     },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": true
-                        }
-                    },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
                             "type": "object",
-                            "additionalProperties": true
+                            "additionalProperties": {
+                                "type": "string"
+                            }
                         }
                     }
                 }
@@ -1099,6 +1106,82 @@ const docTemplate = `{
                 }
             }
         },
+        "/users/change-password/{id}": {
+            "put": {
+                "description": "Allows a user to change their password by providing the current password and a new password.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User"
+                ],
+                "summary": "Change user password",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "User ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Change Password Payload",
+                        "name": "input",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/controllers.ChangePasswordInput"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "User successfully updated",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized - Incorrect Password",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "404": {
+                        "description": "User Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/users/{id}": {
             "put": {
                 "description": "Update user information such as username, email, password, and categories.",
@@ -1246,6 +1329,23 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "controllers.ChangePasswordInput": {
+            "type": "object",
+            "required": [
+                "currentPassword",
+                "newPassword"
+            ],
+            "properties": {
+                "currentPassword": {
+                    "type": "string",
+                    "minLength": 6
+                },
+                "newPassword": {
+                    "type": "string",
+                    "minLength": 6
+                }
+            }
+        },
         "controllers.CityInput": {
             "type": "object",
             "properties": {
