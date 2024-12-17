@@ -81,8 +81,8 @@ Berikut adalah Entity Relationship Diagram (ERD) untuk aplikasi PlantPal yang me
      - `request` (text): Permintaan pengguna.
      - `response` (text): Respon dari sistem.
 
-8. **Virtual_assistant**
-   - **Tabel ini menyimpan data asisten virtual yang melayani permintaan pengguna.**
+8. **travel_routes**
+   - **Tabel ini menyimpan rute perjalanan antara kota.**
      - `id` (integer): Primary key.
      - `origin_city` (varchar): Kota asal.
      - `desination_city` (varchar): Kota tujuan.
