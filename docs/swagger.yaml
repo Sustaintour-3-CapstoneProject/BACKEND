@@ -1093,7 +1093,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: User successfully updated
+          description: OK
           schema:
             additionalProperties:
               type: string
@@ -1104,12 +1104,12 @@ paths:
             additionalProperties: true
             type: object
         "401":
-          description: Unauthorized - Incorrect Password
+          description: Unauthorized
           schema:
             additionalProperties: true
             type: object
         "404":
-          description: User Not Found
+          description: Not Found
           schema:
             additionalProperties:
               type: string

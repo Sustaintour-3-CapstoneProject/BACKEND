@@ -546,11 +546,11 @@ func DeleteUser(c echo.Context) error {
 // @Produce json
 // @Param id path int true "User ID"
 // @Param input body ChangePasswordInput true "Change Password Payload"
-// @Success 200 {object} map[string]string
-// @Failure 400 {object} map[string]interface{}
-// @Failure 401 {object} map[string]interface{}
-// @Failure 404 {object} map[string]string
-// @Failure 500 {object} map[string]string
+// @Success 200 {object} map[string]string "User successfully updated"
+// @Failure 400 {object} map[string]string "Invalid request or validation error"
+// @Failure 401 {object} map[string]string "Incorrect password"
+// @Failure 404 {object} map[string]string "User not found"
+// @Failure 500 {object} map[string]string "Internal server error"
 // @Router /users/change-password/{id} [put]
 func ChangePasswordHandler(c echo.Context) error {
 	id := c.Param("id")

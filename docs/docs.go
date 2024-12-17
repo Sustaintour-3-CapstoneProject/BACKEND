@@ -1139,7 +1139,7 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "User successfully updated",
+                        "description": "OK",
                         "schema": {
                             "type": "object",
                             "additionalProperties": {
@@ -1155,14 +1155,14 @@ const docTemplate = `{
                         }
                     },
                     "401": {
-                        "description": "Unauthorized - Incorrect Password",
+                        "description": "Unauthorized",
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
                         }
                     },
                     "404": {
-                        "description": "User Not Found",
+                        "description": "Not Found",
                         "schema": {
                             "type": "object",
                             "additionalProperties": {
