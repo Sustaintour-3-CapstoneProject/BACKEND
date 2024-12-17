@@ -28,18 +28,8 @@ Berikut adalah Entity Relationship Diagram (ERD) untuk aplikasi PlantPal yang me
      - Satu pengguna memiliki banyak Personalized_destination (one-to-many).
      - Satu pengguna memiliki banyak Virtual_assistant (one-to-many).
 
-2. **Admin**
-   - **Tabel ini menyimpan informasi administrator.**
-     - `id` (integer): Primary key.
-     - `username` (varchar): Nama admin.
-     - `email` (varchar): Email admin.
-     - `password` (varchar): Kata sandi admin.
-     - `role` (varchar): Peran admin.
-   - **Relasi:**
-     - Satu tanaman dapat memiliki banyak data kondisi tanaman (one-to-many dengan tabel PlantsConditions).
-     - Satu tanaman dapat memiliki banyak saran perawatan (one-to-many dengan tabel CareSuggestions).
 
-3. **Personalized_destination**
+2. **Personalized_destination**
    - **Tabel ini menyimpan destinasi yang dipersonalisasi untuk pengguna.**
      - `id` (integer): Primary key.
      - `user_id` (integer): Foreign key ke tabel User.
@@ -47,7 +37,7 @@ Berikut adalah Entity Relationship Diagram (ERD) untuk aplikasi PlantPal yang me
    - **Relasi:**
      - Satu Personalized_destination memiliki banyak Destination (one-to-many).
 
-4. **Desination**
+3. **Desination**
    - **Tabel ini menyimpan informasi destinasi.**
      - `id` (integer): Primary key.
      - `Personalized_destination_ID` (integer): Foreign key ke Personalized_destination.
@@ -63,7 +53,7 @@ Berikut adalah Entity Relationship Diagram (ERD) untuk aplikasi PlantPal yang me
      - Satu Destination memiliki banyak Video_content (one-to-many).
      - Satu Destination memiliki banyak gambar (one-to-many).
 
-5. **Video_content**
+4. **Video_content**
    - **Tabel ini menyimpan konten video terkait destinasi.**
      - `id` (integer): Primary key.
      - `destination_ID` (integer): Foreign key ke tabel Destination.
@@ -71,27 +61,27 @@ Berikut adalah Entity Relationship Diagram (ERD) untuk aplikasi PlantPal yang me
      - `url` (varchar): URL video.
      - `description` (text): Deskripsi video.
 
-6. **gambar**
+5. **gambar**
    - **Tabel ini menyimpan gambar yang berkaitan dengan destinasi.**
      - `id` (integer): Primary key.
      - `destination_ID` (integer): Foreign key ke tabel Destination.
      - `url` (varchar): URL video.
 
-7. **city**
+6. **city**
    - **Tabel ini menyimpan data kota.**
      - `id` (integer): Primary key.
      - `nama` (varchar): Nama kota.
      - `longitude` (float): Garis bujur kota.
      - `latitude` (float): Garis lintang kota.
 
-8. **Virtual_assistant**
+7. **Virtual_assistant**
    - **Tabel ini menyimpan data asisten virtual yang melayani permintaan pengguna.**
      - `id` (integer): Primary key.
      - `User_ID` (integer): Foreign key ke User.
      - `request` (text): Permintaan pengguna.
      - `response` (text): Respon dari sistem.
 
-9. **Virtual_assistant**
+8. **Virtual_assistant**
    - **Tabel ini menyimpan data asisten virtual yang melayani permintaan pengguna.**
      - `id` (integer): Primary key.
      - `origin_city` (varchar): Kota asal.
