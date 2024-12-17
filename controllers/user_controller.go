@@ -538,6 +538,20 @@ func DeleteUser(c echo.Context) error {
 	return c.JSON(http.StatusOK, map[string]string{"message": "User successfully deleted"})
 }
 
+// ChangePasswordHandler godoc
+// @Summary Change user password
+// @Description Allows a user to change their password by providing the current password and a new password.
+// @Tags User
+// @Accept json
+// @Produce json
+// @Param id path int true "User ID"
+// @Param input body ChangePasswordInput true "Change Password Payload"
+// @Success 200 {object} map[string]string "User successfully updated"
+// @Failure 400 {object} map[string]interface{} "Bad Request"
+// @Failure 401 {object} map[string]interface{} "Unauthorized - Incorrect Password"
+// @Failure 404 {object} map[string]string "User Not Found"
+// @Failure 500 {object} map[string]string "Internal Server Error"
+// @Router /users/change-password/{id} [put]
 func ChangePasswordHandler(c echo.Context) error {
 	id := c.Param("id")
 
